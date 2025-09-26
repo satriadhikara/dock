@@ -20,13 +20,14 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { useForm } from "react-hook-form"
+import { signIn } from "@/lib/auth-client"
 
 // Validation schema
 const loginSchema = z.object({
   email: z
-    .string()
+    .email("Please enter a valid email address")
     .min(1, "Email is required")
-    .email("Please enter a valid email address"),
+  ,
   password: z
     .string()
     .min(1, "Password is required")
@@ -51,6 +52,17 @@ export function LoginForm({
     console.log(data)
   }
 
+  const handleGoogleLogin = async () => {
+    await signIn.social({
+      provider: "google",
+      callbackURL: typeof window !== "undefined" ? `${window.location.origin}/` : "/",
+    },{
+      onSuccess: () => {
+        console.log("Success")  
+      }
+    })
+  }
+
   return (
     <div className={cn("flex items-center justify-center  bg-[#2C5AA0]", className)} {...props}>
       <Card className="w-[575px] py-4 lg:p-20 rounded-2xl shadow-lg border-none">
@@ -73,6 +85,7 @@ export function LoginForm({
                 type="button"
                 variant="outline"
                 className="w-full flex items-center gap-2 rounded-full py-5 cursor-pointer"
+                onClick={handleGoogleLogin}
               >
                 <img src="/google.svg" alt="Google" className="h-5 w-5" />
                 Login with Google
@@ -127,6 +140,7 @@ export function LoginForm({
               <Button
                 type="submit"
                 className="w-full rounded-full bg-[#64B5F6] hover:bg-[#42A5F5] cursor-pointer"
+                disabled
               >
                 Login
               </Button>
