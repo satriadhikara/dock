@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { EllipsisVertical, Search } from "lucide-react";
 import { useMemo } from "react";
 import { ContractCard } from "@/components/contract-card";
+import Link from "next/link";
 import { ContractStatusHeaderCard } from "@/components/contract-status-header-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,12 +182,17 @@ export default function ContractsPage() {
                     </div>
                   ) : (
                     contractsForColumn.map((contract) => (
-                      <ContractCard
+                      <Link
                         key={contract.id}
-                        company={contract.counterPartyName ?? "Unknown"}
-                        title={contract.name}
-                        createdAt={formatDate(contract.createdAt)}
-                      />
+                        href={`/contracts/view/${contract.id}`}
+                        className="block"
+                      >
+                        <ContractCard
+                          company={contract.counterPartyName ?? "Unknown"}
+                          title={contract.name}
+                          createdAt={formatDate(contract.createdAt)}
+                        />
+                      </Link>
                     ))
                   )}
                 </ScrollArea>

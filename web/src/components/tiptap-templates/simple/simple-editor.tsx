@@ -170,8 +170,9 @@ export function SimpleEditor({
       return;
     }
 
-    editor.commands.setContent(target, false, {
-      preserveWhitespace: false,
+    editor.commands.setContent(target, {
+      emitUpdate: false,
+      parseOptions: { preserveWhitespace: false },
     });
   }, [content, editor]);
 
