@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import os
 
 from .parser import load_text
 from .extractor import extract
@@ -13,7 +14,10 @@ def cmd_extract(args):
     txt = load_text(args.input) if args.input else args.text
     try:
         from .llm import GeminiClient
-        llm = GeminiClient()
+        # Enable file logging if requested
+        if args.log_llm:
+            os.environ.setdefault("LLM_LOG", "1")
+        llm = GeminiClient(log=bool(args.log_llm))
         lr = llm.extract_and_analyze(txt)
         rules = extract(txt)
         meta = lr.metadata.model_copy(update={
@@ -24,7 +28,10 @@ def cmd_extract(args):
             "amounts": lr.metadata.amounts or rules.metadata.amounts,
             "obligations": lr.metadata.obligations or rules.metadata.obligations,
         })
-        print(json.dumps({"text": txt, "metadata": meta.model_dump()}, ensure_ascii=False, indent=2, default=str))
+        out = {"text": txt, "metadata": meta.model_dump()}
+        if args.log_llm and hasattr(lr, "prompt"):
+            out["llm_debug"] = {"prompt": getattr(lr, "prompt", None), "response": getattr(lr, "response_text", None)}
+        print(json.dumps(out, ensure_ascii=False, indent=2, default=str))
     except Exception:
         result = extract(txt)
         print(json.dumps(result.model_dump(), ensure_ascii=False, indent=2, default=str))
@@ -42,7 +49,9 @@ def cmd_analyze(args):
         policies = load_policies(str(resources)) if resources.exists() else []
     try:
         from .llm import GeminiClient
-        llm = GeminiClient()
+        if args.log_llm:
+            os.environ.setdefault("LLM_LOG", "1")
+        llm = GeminiClient(log=bool(args.log_llm))
         lr = llm.extract_and_analyze(txt)
         rules = extract(txt)
         merged_meta = lr.metadata.model_copy(update={
@@ -58,6 +67,8 @@ def cmd_analyze(args):
             combined.setdefault(r.id, r)
         comp = check_compliance(merged_meta, txt, policies)
         out = {"metadata": merged_meta.model_dump(), "risks": [r.model_dump() for r in combined.values()], "compliance": [c.model_dump() for c in comp]}
+        if args.log_llm and hasattr(lr, "prompt"):
+            out["llm_debug"] = {"prompt": getattr(lr, "prompt", None), "response": getattr(lr, "response_text", None)}
         print(json.dumps(out, ensure_ascii=False, indent=2, default=str))
     except Exception:
         ex = extract(txt)
@@ -107,12 +118,14 @@ def build_parser():
     pe = sub.add_parser("extract", help="Extract metadata from contract text or file")
     pe.add_argument("--input", type=str, help="Path to file (pdf, docx, txt)")
     pe.add_argument("--text", type=str, help="Raw text input if no file provided")
+    pe.add_argument("--log-llm", action="store_true", help="Print LLM prompt and response in output and enable file logging")
     pe.set_defaults(func=cmd_extract)
 
     pa = sub.add_parser("analyze", help="Analyze risks and compliance")
     pa.add_argument("--input", type=str)
     pa.add_argument("--text", type=str)
     pa.add_argument("--policies", type=str, help="Path to policies.yaml or .json")
+    pa.add_argument("--log-llm", action="store_true", help="Print LLM prompt and response in output and enable file logging")
     pa.set_defaults(func=cmd_analyze)
 
     pd = sub.add_parser("draft", help="Draft a contract from clauses and template")
@@ -125,6 +138,12 @@ def build_parser():
 
 
 def main(argv=None):
+    # Load .env if available
+    try:
+        from dotenv import load_dotenv  # type: ignore
+        load_dotenv()
+    except Exception:
+        pass
     parser = build_parser()
     args = parser.parse_args(argv)
     args.func(args)
