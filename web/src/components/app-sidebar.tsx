@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { useSession } from "@/lib/auth-client";
 
 const items = [
   {
@@ -59,7 +60,7 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-
+  const { data: session } = useSession();
   return (
     <Sidebar className="border-r bg-white">
       <SidebarContent className="flex flex-col justify-between h-full">
@@ -135,10 +136,20 @@ export function AppSidebar() {
         <SidebarFooter className="p-4 border-t">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 flex items-center justify-center rounded-full bg-yellow-400 text-white font-bold">
-              A
+              {session?.user?.image ? (
+                <Image
+                  className="rounded-full size-9"
+                  src={session?.user?.image}
+                  alt="User Image"
+                  width={36}
+                  height={36}
+                />
+              ) : (
+                session?.user?.name?.charAt(0)
+              )}
             </div>
             <div className="flex flex-col">
-              <span className="font-medium text-sm">Andhika Fadillah</span>
+              <span className="font-medium text-sm">{session?.user?.name}</span>
               <span className="text-xs text-gray-500">Legal Team</span>
             </div>
           </div>
