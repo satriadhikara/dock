@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Nunito_Sans } from "next/font/google";
 import "./globals.css";
+import { ConditionalLayout } from "@/components/conditional-layout"
 
 const nunitoSans = Nunito_Sans({  
   variable: "--font-nunito-sans",
@@ -22,7 +23,9 @@ export default function RootLayout({
       <body
         className={`${nunitoSans.variable} antialiased`}
       >
-        {children}
+        <ConditionalLayout>
+          {children}
+        </ConditionalLayout>
       </body>
     </html>
   );
