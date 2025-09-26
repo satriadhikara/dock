@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ContractsPage() {
   return (
-    <div className="h-screen w-full p-8 flex flex-col overflow-hidden">
+    <div className="h-screen w-full p-8 flex flex-col overflow-hidden bg-[#F8FAFC]">
       <header className="flex justify-between items-center mb-6">
         <h1 className="font-bold text-black">Contracts on going</h1>
 
