@@ -10,7 +10,7 @@ export const auth = betterAuth({
 			clientSecret: Bun.env.GOOGLE_CLIENT_SECRET as string,
 		},
 	},
-    trustedOrigins: [Bun.env.CLIENT_URL as string],
+	trustedOrigins: [Bun.env.CLIENT_URL as string],
 	database: drizzleAdapter(db, {
 		provider: "pg",
 		schema,

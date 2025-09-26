@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import auth from "./internal/auth/controller";
+import chat from "./internal/chat/controller";
 import { cors } from "hono/cors";
 import { auth as authLib } from "./lib/auth";
 
@@ -39,6 +40,7 @@ app.get("/health", (c) => {
 });
 
 app.route("/api/auth", auth);
+app.route("/api/chat", chat);
 
 export default {
 	port: Bun.env.PORT,
