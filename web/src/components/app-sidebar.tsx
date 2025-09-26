@@ -79,9 +79,8 @@ export function AppSidebar() {
   const { data: session } = useSession();
   const router = useRouter();
   const handleStartDrafting = () => {
-    // Add your start drafting logic here
-    console.log("Start drafting clicked");
-    router.push("/contracts/new");
+    // Navigate to start drafting page
+    router.push("/start-drafting");
   };
 
   const handleStoreSignedDoc = () => {
