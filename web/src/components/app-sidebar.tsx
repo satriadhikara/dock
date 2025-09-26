@@ -19,13 +19,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { useSession } from "@/lib/auth-client";
+import { signOut, useSession } from "@/lib/auth-client";
 import {
   FilePlus,
   FileUp,
@@ -36,7 +41,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const items = [
   {
@@ -83,7 +88,12 @@ export function AppSidebar() {
   const { data: session } = useSession();
   const router = useRouter();
   const [storeDocModalOpen, setStoreDocModalOpen] = useState(false);
-  
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const handleStartDrafting = () => {
     // Navigate to start drafting page
     router.push("/contracts/new");
@@ -93,6 +103,11 @@ export function AppSidebar() {
     // Open the store signed document modal
     setStoreDocModalOpen(true);
   };
+
+  const handleSignOut = useCallback(async () => {
+    await signOut();
+    router.push("/login");
+  }, []);
 
   return (
     <Sidebar className="border-r bg-white">
@@ -229,7 +244,17 @@ export function AppSidebar() {
             </div>
             <div className="flex flex-col">
               <span className="font-medium text-sm">{session?.user?.name}</span>
-              <span className="text-xs text-gray-500">Legal Team</span>
+              {isClient && session ? (
+                <button
+                  type="button"
+                  className="text-left text-xs text-gray-500 hover:underline"
+                  onClick={handleSignOut}
+                >
+                  Sign out
+                </button>
+              ) : (
+                <span className="text-xs text-gray-500">Legal Team</span>
+              )}
             </div>
           </div>
         </SidebarFooter>
@@ -255,7 +280,9 @@ export function AppSidebar() {
               <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-gray-500">
                 <UploadCloud className="w-10 h-10 mb-2" />
                 <p>Drag and Drop files, or browse</p>
-                <p className="text-xs text-gray-400">Allowed files: .docx, .pdf</p>
+                <p className="text-xs text-gray-400">
+                  Allowed files: .docx, .pdf
+                </p>
               </div>
             </TabsContent>
 
@@ -272,7 +299,9 @@ export function AppSidebar() {
               <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-gray-500">
                 <UploadCloud className="w-10 h-10 mb-2" />
                 <p>Drag and Drop files, or browse</p>
-                <p className="text-xs text-gray-400">Allowed files: .docx, .pdf</p>
+                <p className="text-xs text-gray-400">
+                  Allowed files: .docx, .pdf
+                </p>
               </div>
             </TabsContent>
           </Tabs>

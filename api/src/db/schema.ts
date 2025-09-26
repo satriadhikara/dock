@@ -112,6 +112,7 @@ export const contract = pgTable("contract", {
 	createdAt: timestamp("created_at")
 		.notNull()
 		.$defaultFn(() => new Date()),
+	signageDate: timestamp("signage_date"),
 	startedAt: timestamp("started_at"),
 	initialEndDate: timestamp("initial_end_date"),
 	content: jsonb("content"),
@@ -129,4 +130,14 @@ export const contractAsset = pgTable("contract_asset", {
 	createdAt: timestamp("created_at")
 		.notNull()
 		.$defaultFn(() => new Date()),
+});
+
+export const contractContributor = pgTable("contract_contributor", {
+	id: text("id").primaryKey(),
+	contractId: text("contract_id")
+		.notNull()
+		.references(() => contract.id, { onDelete: "cascade" }),
+	userId: text("user_id")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
 });

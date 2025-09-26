@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { UploadCloud } from "lucide-react";
@@ -21,13 +26,13 @@ export default function ContractModal() {
 
           <Tabs defaultValue="new" className="w-full mt-4">
             <TabsList className="mb-6 grid w-full grid-cols-2 gap-4">
-              <TabsTrigger 
+              <TabsTrigger
                 value="new"
                 className="flex items-center gap-2 border border-[#E3E7EA] py-4 text-[#7F868E] transition-colors data-[state=active]:border-[#0BA5EC] data-[state=active]:bg-[#E0F2FE] data-[state=active]:text-[#0BA5EC] hover:border-gray-300 hover:bg-gray-50 !cursor-pointer"
               >
                 New Contract
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="ongoing"
                 className="flex items-center gap-2 border border-[#E3E7EA] py-4 text-[#7F868E] transition-colors data-[state=active]:border-[#0BA5EC] data-[state=active]:bg-[#E0F2FE] data-[state=active]:text-[#0BA5EC] hover:border-gray-300 hover:bg-gray-50 !cursor-pointer"
               >
@@ -40,7 +45,9 @@ export default function ContractModal() {
               <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-gray-500">
                 <UploadCloud className="w-10 h-10 mb-2" />
                 <p>Drag and Drop files, or browse</p>
-                <p className="text-xs text-gray-400">Allowed files: .docx, .pdf</p>
+                <p className="text-xs text-gray-400">
+                  Allowed files: .docx, .pdf
+                </p>
               </div>
             </TabsContent>
 
@@ -57,7 +64,9 @@ export default function ContractModal() {
               <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-gray-500">
                 <UploadCloud className="w-10 h-10 mb-2" />
                 <p>Drag and Drop files, or browse</p>
-                <p className="text-xs text-gray-400">Allowed files: .docx, .pdf</p>
+                <p className="text-xs text-gray-400">
+                  Allowed files: .docx, .pdf
+                </p>
               </div>
             </TabsContent>
           </Tabs>

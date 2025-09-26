@@ -185,7 +185,7 @@ export default function NewContractPage() {
         throw new Error("NEXT_PUBLIC_API_URL is not configured.");
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/contract/mock`, {
+      const response = await fetch(`${apiBaseUrl}/api/contract`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

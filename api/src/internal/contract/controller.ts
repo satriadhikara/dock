@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import {
-	createContractMock,
+	createContract,
 	createCounterParty,
 	deleteContracts,
 	getContract,
@@ -8,8 +8,14 @@ import {
 	getCounterParties,
 	updateContractContent,
 } from "./service";
+import { auth } from "../../lib/auth";
 
-const app = new Hono();
+const app = new Hono<{
+	Variables: {
+		user: typeof auth.$Infer.Session.user | null;
+		session: typeof auth.$Infer.Session.session | null;
+	};
+}>();
 
 app.get("/", async (c) => {
 	try {
@@ -39,7 +45,14 @@ app.post("/counter-parties", async (c) => {
 	}
 });
 
-app.post("/mock", async (c) => {
+app.post("/", async (c) => {
+	const session = c.get("session");
+	const user = c.get("user");
+
+	if (!user || !session) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
+
 	const { name, content, counterPartyId } = await c.req.json<{
 		name?: string;
 		content?: unknown;
@@ -54,10 +67,15 @@ app.post("/mock", async (c) => {
 		return c.json({ error: "counterPartyId is required" }, 400);
 	}
 	try {
-		const contract = await createContractMock(name, counterPartyId, content);
+		const contract = await createContract(
+			name,
+			counterPartyId,
+			content,
+			user.id,
+		);
 		return c.json(contract);
 	} catch (_error) {
-		return c.json({ error: "Failed to create mock contract" }, 500);
+		return c.json({ error: "Failed to create contract" }, 500);
 	}
 });
 
