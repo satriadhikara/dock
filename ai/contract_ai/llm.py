@@ -11,6 +11,14 @@ except Exception:  # pragma: no cover - optional dep
 from .types import Metadata, RiskFinding
 
 
+def _load_dotenv_if_available():
+    try:
+        from dotenv import load_dotenv  # type: ignore
+        load_dotenv()
+    except Exception:
+        pass
+
+
 class LLMNotConfigured(RuntimeError):
     pass
 
@@ -21,7 +29,8 @@ class GeminiClient:
     If GEMINI_API_KEY or google-generativeai is missing, raises LLMNotConfigured so callers can fallback.
     """
 
-    def __init__(self, model_name: str = "gemini-1.5-pro-latest"):
+    def __init__(self, model_name: str = "gemini-2.5-pro"):
+        _load_dotenv_if_available()
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key or genai is None:
             raise LLMNotConfigured("Gemini not configured (missing SDK or GEMINI_API_KEY)")

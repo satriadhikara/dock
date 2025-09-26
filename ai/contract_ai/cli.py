@@ -125,6 +125,12 @@ def build_parser():
 
 
 def main(argv=None):
+    # Load .env if available
+    try:
+        from dotenv import load_dotenv  # type: ignore
+        load_dotenv()
+    except Exception:
+        pass
     parser = build_parser()
     args = parser.parse_args(argv)
     args.func(args)
