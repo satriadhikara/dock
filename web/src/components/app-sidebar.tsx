@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { useSession } from "@/lib/auth-client";
+import { signOut, useSession } from "@/lib/auth-client";
 import {
   FilePlus,
   FileUp,
@@ -41,7 +41,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const items = [
   {
@@ -88,6 +88,11 @@ export function AppSidebar() {
   const { data: session } = useSession();
   const router = useRouter();
   const [storeDocModalOpen, setStoreDocModalOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleStartDrafting = () => {
     // Navigate to start drafting page
@@ -98,6 +103,11 @@ export function AppSidebar() {
     // Open the store signed document modal
     setStoreDocModalOpen(true);
   };
+
+  const handleSignOut = useCallback(async () => {
+    await signOut();
+    router.push("/login");
+  }, []);
 
   return (
     <Sidebar className="border-r bg-white">
@@ -234,7 +244,17 @@ export function AppSidebar() {
             </div>
             <div className="flex flex-col">
               <span className="font-medium text-sm">{session?.user?.name}</span>
-              <span className="text-xs text-gray-500">Legal Team</span>
+              {isClient && session ? (
+                <button
+                  type="button"
+                  className="text-left text-xs text-gray-500 hover:underline"
+                  onClick={handleSignOut}
+                >
+                  Sign out
+                </button>
+              ) : (
+                <span className="text-xs text-gray-500">Legal Team</span>
+              )}
             </div>
           </div>
         </SidebarFooter>

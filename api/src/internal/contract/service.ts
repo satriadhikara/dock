@@ -10,6 +10,7 @@ export const getContracts = async () => {
 				name: contract.name,
 				status: contract.status,
 				createdAt: contract.createdAt,
+				signageDate: contract.signageDate,
 				type: contract.type,
 				startedAt: contract.startedAt,
 				initialEndDate: contract.initialEndDate,
@@ -57,10 +58,11 @@ export const createCounterParty = async (name: string) => {
 	}
 };
 
-export const createContractMock = async (
+export const createContract = async (
 	name: string,
 	counterPartyId: string,
 	content: unknown,
+	ownerId: string,
 ) => {
 	try {
 		const id = Bun.randomUUIDv7();
@@ -72,7 +74,7 @@ export const createContractMock = async (
 				name,
 				counterPartyId,
 				status: "Draft",
-				ownerId: "M1dVCxAvPjV28VOMstVWpbxTgFkh5lRP",
+				ownerId,
 				type: "BuiltIn",
 				createdAt: new Date(),
 				content: content,
@@ -88,14 +90,17 @@ export const createContractMock = async (
 
 export const updateContractContent = async (id: string, content: unknown) => {
 	try {
-		const [contractResult] = await db
+		const [updated] = await db
 			.update(contract)
 			.set({
 				content,
 			})
 			.where(eq(contract.id, id))
-			.returning();
-		return contractResult;
+			.returning({ id: contract.id });
+		if (!updated) {
+			return undefined;
+		}
+		return await getContract(id);
 	} catch (error) {
 		console.error(error);
 		throw error;
@@ -105,8 +110,25 @@ export const updateContractContent = async (id: string, content: unknown) => {
 export const getContract = async (id: string) => {
 	try {
 		const [contractResult] = await db
-			.select()
+			.select({
+				id: contract.id,
+				name: contract.name,
+				status: contract.status,
+				createdAt: contract.createdAt,
+				signageDate: contract.signageDate,
+				type: contract.type,
+				startedAt: contract.startedAt,
+				initialEndDate: contract.initialEndDate,
+				ownerId: contract.ownerId,
+				counterPartyId: contract.counterPartyId,
+				content: contract.content,
+				counterPartyName: counterParty.name,
+				ownerName: user.name,
+				ownerImage: user.image,
+			})
 			.from(contract)
+			.leftJoin(counterParty, eq(contract.counterPartyId, counterParty.id))
+			.leftJoin(user, eq(contract.ownerId, user.id))
 			.where(eq(contract.id, id));
 		return contractResult;
 	} catch (error) {

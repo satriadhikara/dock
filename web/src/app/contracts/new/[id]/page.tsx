@@ -7,10 +7,22 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { Button } from "@/components/ui/button";
+import ContractLayout from "@/components/document-sidebar";
 
 type ContractResponse = {
   id: string;
   name: string;
+  status: string;
+  createdAt: string;
+  signageDate: string | null;
+  type: string;
+  startedAt: string | null;
+  initialEndDate: string | null;
+  counterPartyId: string;
+  counterPartyName: string | null;
+  ownerId: string;
+  ownerName: string | null;
+  ownerImage: string | null;
   content: JSONContent | null;
 };
 
@@ -232,8 +244,9 @@ const NewContractPage = () => {
           </Button>
         </div>
       </header>
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex overflow-y-auto">
         <SimpleEditor content={initialContent} onChange={setEditorContent} />
+        <ContractLayout contract={contract} />
       </main>
     </div>
   );

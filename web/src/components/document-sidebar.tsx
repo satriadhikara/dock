@@ -34,14 +34,95 @@ import {
   XCircle,
   Send,
   Bot,
+  Ellipsis,
+  CircleAlert,
 } from "lucide-react";
 
-export default function ContractLayout() {
+type ContractLayoutProps = {
+  contract?: {
+    name?: string | null;
+    status?: string | null;
+    createdAt?: string | null;
+    signageDate?: string | null;
+    type?: string | null;
+    startedAt?: string | null;
+    initialEndDate?: string | null;
+    counterPartyName?: string | null;
+    ownerName?: string | null;
+  };
+};
+
+const formatDisplayDate = (value?: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+export default function ContractLayout({ contract }: ContractLayoutProps) {
   const [activeTab, setActiveTab] = useState("contract");
   const [openRelated, setOpenRelated] = useState(true);
   const [openPT, setOpenPT] = useState(true);
   const [openContract, setOpenContract] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const signageDate = formatDisplayDate(contract?.signageDate);
+  const startDate = formatDisplayDate(contract?.startedAt);
+  const initialEndDate = formatDisplayDate(contract?.initialEndDate);
+
+  const contractRows = [
+    {
+      label: "Signage date",
+      value: signageDate ?? "Add",
+      editable: true,
+      isAdd: !signageDate,
+      trackMissing: true,
+    },
+    {
+      label: "Start date",
+      value: startDate ?? "Add",
+      editable: true,
+      isAdd: !startDate,
+      trackMissing: true,
+    },
+    {
+      label: "Initial end date",
+      value: initialEndDate ?? "Add",
+      editable: true,
+      isAdd: !initialEndDate,
+      trackMissing: true,
+    },
+    {
+      label: "Renewal type",
+      value: "None",
+      editable: true,
+      isAdd: false,
+      trackMissing: false,
+    },
+  ];
+
+  const missingFieldsCount =
+    (contract?.counterPartyName ? 0 : 1) +
+    contractRows.filter((row) => row.trackMissing && row.isAdd).length;
+  const hasMissingFields = missingFieldsCount > 0;
+  const missingFieldsLabel = hasMissingFields
+    ? `${missingFieldsCount} missing field${missingFieldsCount > 1 ? "s" : ""}`
+    : "All key fields captured";
+  const missingFieldsBannerClasses = hasMissingFields
+    ? "bg-[#FFEBEE] border-[#EC2D30] text-[#EC2D30]"
+    : "bg-[#E8F5E9] border-[#2E7D32] text-[#2E7D32]";
+
+  const BannerIcon = hasMissingFields ? CircleAlert : CheckCircle;
 
   // State for workflow sections
   const [openReview, setOpenReview] = useState(false);
@@ -136,15 +217,6 @@ export default function ContractLayout() {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-
-  // Function to handle role changes
-  const handleRoleChange = (index: number, newRole: string) => {
-    setContributors((prev) =>
-      prev.map((contributor, i) =>
-        i === index ? { ...contributor, role: newRole } : contributor,
-      ),
-    );
-  };
 
   // Function to toggle flag resolution
   const toggleFlagResolution = (
@@ -271,9 +343,43 @@ export default function ContractLayout() {
           {activeTab === "contract" && (
             <>
               <div className="px-4 py-3 border-b">
-                <h2 className="text-sm font-medium text-gray-700">
+                <h2 className="text-sm font-medium text-gray-700 mb-2.5">
                   Contract Information
                 </h2>
+
+                {contract ? (
+                  <div className="mb-2 flex flex-wrap gap-2 text-xs text-gray-600">
+                    <span className="inline-flex items-center rounded-full border border-[#D0D3D7] bg-[#F7F7F7] px-2 py-0.5 text-[#192632] font-medium">
+                      {contract.status ?? "Unknown status"}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[#E3E7EA] px-2 py-0.5">
+                      <span className="text-gray-500">Type</span>
+                      <span className="text-gray-700 font-medium">
+                        {contract.type ?? "—"}
+                      </span>
+                    </span>
+                    {contract.ownerName ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#E3E7EA] px-2 py-0.5">
+                        <User className="h-3 w-3" />
+                        <span className="text-gray-500">Owner</span>
+                        <span className="text-gray-700 font-medium">
+                          {contract.ownerName}
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div
+                  className={`border rounded-[12px] flex items-center gap-2 py-2.5 px-3 ${missingFieldsBannerClasses}`}
+                >
+                  <BannerIcon
+                    className={`w-4 h-4 ${
+                      hasMissingFields ? "text-[#EC2D30]" : "text-[#2E7D32]"
+                    }`}
+                  />
+                  <span className="text-xs">{missingFieldsLabel}</span>
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-3 space-y-4">
@@ -302,7 +408,7 @@ export default function ContractLayout() {
 
                 <Collapsible open={openPT} onOpenChange={setOpenPT}>
                   <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-medium hover:text-gray-600 transition-colors">
-                    PT ABC
+                    {contract?.counterPartyName ?? "Counterparty"}
                     <ChevronDown
                       className={`w-4 h-4 transition-transform ${
                         openPT ? "rotate-180" : ""
@@ -313,12 +419,14 @@ export default function ContractLayout() {
                     <div className="rounded-md border p-3 text-sm space-y-2 bg-gray-50">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-gray-800">
-                          PT ABC
+                          {contract?.counterPartyName ?? "Counterparty not set"}
                         </span>
                         <Pencil className="w-3 h-3 text-gray-500 cursor-pointer hover:text-gray-700" />
                       </div>
                       <p className="text-xs text-gray-600">
-                        Counterparty: PT ABC
+                        {contract?.counterPartyName
+                          ? `Counterparty: ${contract.counterPartyName}`
+                          : "Link this contract to a counterparty to keep everyone aligned."}
                       </p>
                     </div>
                   </CollapsibleContent>
@@ -337,12 +445,15 @@ export default function ContractLayout() {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-3">
                     <div className="space-y-4 text-sm">
-                      <Row label="Template" value="None" editable />
-                      <Row label="Folder" value="Repository" editable />
-                      <Row label="Signage date" value="Add" editable />
-                      <Row label="Start date" value="Add" editable />
-                      <Row label="Initial end date" value="Add" editable />
-                      <Row label="Renewal type" value="None" editable />
+                      {contractRows.map((row) => (
+                        <Row
+                          key={row.label}
+                          label={row.label}
+                          value={row.value}
+                          editable={row.editable}
+                          isAdd={row.isAdd}
+                        />
+                      ))}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
@@ -411,9 +522,7 @@ export default function ContractLayout() {
                   <Contributor
                     key={contributor.name}
                     name={contributor.name}
-                    role={contributor.role}
                     color={contributor.color}
-                    onRoleChange={(newRole) => handleRoleChange(index, newRole)}
                   />
                 ))}
               </ul>
@@ -788,12 +897,9 @@ function Row({
 // Contributor component
 function Contributor({
   name,
-  role,
   color,
-  onRoleChange,
 }: {
   name: string;
-  role: string;
   color: string;
   onRoleChange?: (newRole: string) => void;
 }) {
@@ -807,17 +913,6 @@ function Contributor({
         </span>
         <span className="text-gray-800 text-sm">{name}</span>
       </div>
-      <Select value={role} onValueChange={onRoleChange}>
-        <SelectTrigger className="w-[100px] h-7 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Can edit">Can edit</SelectItem>
-          <SelectItem value="Can view">Can view</SelectItem>
-          <SelectItem value="Admin">Admin</SelectItem>
-          <SelectItem value="Owner">Owner</SelectItem>
-        </SelectContent>
-      </Select>
     </li>
   );
 }
