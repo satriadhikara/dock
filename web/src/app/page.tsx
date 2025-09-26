@@ -18,7 +18,7 @@ import { ContractTrendChart } from "@/components/dashboard/line-chart";
 
 export default function Dashboard() {
   return (
-    <div className="p-6 space-y-6 bg-[#F8FAFC]">
+    <div className="w-full p-6 space-y-6 bg-[#F8FAFC]">
       {/* Top Bar */}
       <div className="flex items-center justify-between">
         <div className="relative w-96">
