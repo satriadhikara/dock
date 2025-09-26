@@ -19,6 +19,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -31,8 +33,10 @@ import {
   Plus,
   Pencil,
   CloudUpload,
+  UploadCloud,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const items = [
   {
@@ -78,14 +82,16 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const router = useRouter();
+  const [storeDocModalOpen, setStoreDocModalOpen] = useState(false);
+  
   const handleStartDrafting = () => {
     // Navigate to start drafting page
     router.push("/contracts/new");
   };
 
   const handleStoreSignedDoc = () => {
-    // Add your store signed document logic here
-    console.log("Store signed document clicked");
+    // Open the store signed document modal
+    setStoreDocModalOpen(true);
   };
 
   return (
@@ -228,6 +234,50 @@ export function AppSidebar() {
           </div>
         </SidebarFooter>
       </SidebarContent>
+
+      {/* Store Signed Document Modal */}
+      <Dialog open={storeDocModalOpen} onOpenChange={setStoreDocModalOpen}>
+        <DialogContent className="max-w-lg bg-white rounded-2xl p-6 shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-center">
+              Store a signed document
+            </DialogTitle>
+          </DialogHeader>
+
+          <Tabs defaultValue="new" className="w-full mt-4">
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger value="new">New Contract</TabsTrigger>
+              <TabsTrigger value="ongoing">On-going Contract</TabsTrigger>
+            </TabsList>
+
+            {/* New Contract Tab */}
+            <TabsContent value="new" className="mt-6">
+              <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-gray-500">
+                <UploadCloud className="w-10 h-10 mb-2" />
+                <p>Drag and Drop files, or browse</p>
+                <p className="text-xs text-gray-400">Allowed files: .docx, .pdf</p>
+              </div>
+            </TabsContent>
+
+            {/* Ongoing Contract Tab */}
+            <TabsContent value="ongoing" className="mt-6">
+              <div className="mb-4">
+                <select className="w-full border rounded-md p-2 text-gray-600">
+                  <option>Select on-going contract</option>
+                  <option>Contract A</option>
+                  <option>Contract B</option>
+                </select>
+              </div>
+
+              <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-gray-500">
+                <UploadCloud className="w-10 h-10 mb-2" />
+                <p>Drag and Drop files, or browse</p>
+                <p className="text-xs text-gray-400">Allowed files: .docx, .pdf</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }
