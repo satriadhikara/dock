@@ -17,6 +17,68 @@ import { ContractOverviewChart } from "@/components/dashboard/pie-chart";
 import { ContractTrendChart } from "@/components/dashboard/line-chart";
 
 export default function Dashboard() {
+  const statsData = [
+    {
+      title: "Total Contract Value",
+      value: "Rp80.000.000.000",
+      textColor: "text-[#175CD3]",
+      backgroundColor: "bg-[#E0F2FE]",
+      borderColor: "border-[#53B1FD]",
+    },
+    {
+      title: "Active Contract",
+      value: "8",
+      textColor: "text-gray-500",
+      backgroundColor: "bg-white",
+      borderColor: "border-gray-200",
+    },
+    {
+      title: "Contract in Negotiation",
+      value: "80",
+      textColor: "text-gray-500",
+      backgroundColor: "bg-white",
+      borderColor: "border-gray-200",
+    },
+    {
+      title: "Near Due Date",
+      value: "80",
+      textColor: "text-[#F04438]",
+      backgroundColor: "bg-[#FFFBFA]",
+      borderColor: "border-red-300",
+    },
+  ];
+
+  const activitiesData = [
+    {
+      id: 1,
+      message: "Yusril assigning you to a new contract",
+      time: "13:42 21/09/2025",
+      iconBg: "bg-[#4E5BA6]",
+      icon: FileText,
+    },
+    {
+      id: 2,
+      message: "A document has been signed",
+      time: "10:12 21/09/2025",
+      iconBg: "bg-[#12B76A]",
+      icon: FileText,
+    },
+    {
+      id: 3,
+      message: "Satriadihikara approved Contract-1",
+      time: "10:12 21/09/2025",
+      iconBg: "bg-[#53B1FD]",
+      icon: FileText,
+    },
+    {
+      id: 4,
+      message: "Farrel updating a document",
+      time: "09:12 21/09/2025",
+      iconBg: "bg-[#FDB022]",
+      icon: FileText,
+    },
+  ];
+
   return (
     <div className="w-full p-6 space-y-6 bg-[#F8FAFC]">
       {/* Top Bar */}
@@ -47,21 +109,15 @@ export default function Dashboard() {
           <div className="flex gap-4">
             <Button
               variant="outline"
-              className="flex-1 rounded-lg !bg-white !text-[#1E609E] hover:!bg-gray-50 border shadow cursor-pointer"
+              className="flex-1 h-14 rounded-lg !bg-white !text-[#1E609E] hover:!bg-gray-50 border shadow cursor-pointer text-base"
             >
-              <FilePlus className="w-4 h-4 mr-2" /> Create New Contract
+              <FilePlus className="w-5 h-5 mr-2" /> Create New Contract
             </Button>
             <Button
               variant="outline"
-              className="flex-1 rounded-lg !bg-white !text-[#1E609E] hover:!bg-gray-50 border shadow cursor-pointer"
+              className="flex-1 h-14 rounded-lg !bg-white !text-[#1E609E] hover:!bg-gray-50 border shadow cursor-pointer text-base"
             >
-              <CloudUpload className="w-4 h-4 mr-2" /> Store a Signed Document
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 rounded-lg !bg-white !text-[#1E609E] hover:!bg-gray-50 border shadow cursor-pointer"
-            >
-              <Signature className="w-4 h-4 mr-2" /> Sign a Contract
+              <CloudUpload className="w-5 h-5 mr-2" /> Store a Signed Document
             </Button>
           </div>
 
@@ -123,42 +179,25 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                <li className="flex justify-between items-center text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[#4E5BA6] rounded-full flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-white" />
-                    </div>
-                    <span>Yusril assigning you to a new contract</span>
-                  </div>
-                  <span className="text-gray-400">13:42 21/09/2025</span>
-                </li>
-                <li className="flex justify-between items-center text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[#12B76A] rounded-full flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-white" />
-                    </div>
-                    <span>A document has been signed</span>
-                  </div>
-                  <span className="text-gray-400">10:12 21/09/2025</span>
-                </li>
-                <li className="flex justify-between items-center text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[#53B1FD] rounded-full flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-white" />
-                    </div>
-                    <span>Satriadihikara approved Contract-1</span>
-                  </div>
-                  <span className="text-gray-400">10:12 21/09/2025</span>
-                </li>
-                <li className="flex justify-between items-center text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[#FDB022] rounded-full flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-white" />
-                    </div>
-                    <span>Farrel updating a document</span>
-                  </div>
-                  <span className="text-gray-400">09:12 21/09/2025</span>
-                </li>
+                {activitiesData.map((activity) => {
+                  const IconComponent = activity.icon;
+                  return (
+                    <li
+                      key={activity.id}
+                      className="flex justify-between items-center text-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-8 h-8 ${activity.iconBg} rounded-full flex items-center justify-center`}
+                        >
+                          <IconComponent className="w-4 h-4 text-white" />
+                        </div>
+                        <span>{activity.message}</span>
+                      </div>
+                      <span className="text-gray-400">{activity.time}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </CardContent>
           </Card>
@@ -166,32 +205,21 @@ export default function Dashboard() {
 
         {/* Stats Cards */}
         <div className="flex flex-col gap-4 w-64">
-          <Card className="rounded-xl py-3 bg-[#E0F2FE] border border-[#53B1FD]">
-            <CardContent className="p-4">
-              <p className="text-sm text-[#175CD3]">Total Contract Value</p>
-              <p className="text-xl font-bold text-[#175CD3]">
-                Rp80.000.000.000
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-xl py-3">
-            <CardContent className="p-4">
-              <p className="text-sm text-gray-500">Active Contract</p>
-              <p className="text-xl font-bold">8</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-xl py-3">
-            <CardContent className="p-4">
-              <p className="text-sm text-gray-500">Contract in Negotiation</p>
-              <p className="text-xl font-bold">80</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-xl border py-3 border-red-300 bg-[#FFFBFA]">
-            <CardContent className="p-4">
-              <p className="text-sm text-[#F04438]">Near Due Date</p>
-              <p className="text-xl font-bold text-[#F04438]">80</p>
-            </CardContent>
-          </Card>
+          {statsData.map((stat, index) => (
+            <Card
+              key={index}
+              className={`rounded-xl py-3 ${stat.backgroundColor} border ${stat.borderColor}`}
+            >
+              <CardContent className="p-4">
+                <p className={`text-sm ${stat.textColor}`}>{stat.title}</p>
+                <p
+                  className={`text-xl font-bold ${stat.textColor === "text-gray-500" ? "text-black" : stat.textColor}`}
+                >
+                  {stat.value}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>

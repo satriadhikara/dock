@@ -12,7 +12,12 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname();
 
   // Routes where sidebar should not be shown
-  const noSidebarRoutes = ["/login", "/register", "/forgot-password"];
+  const noSidebarRoutes = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/start-drafting",
+  ];
 
   // Routes that should not show sidebar (including dynamic routes)
   const noSidebarRoutePrefixes = ["/contracts/new", "/contracts/view"];
