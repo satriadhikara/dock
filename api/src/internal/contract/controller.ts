@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createCounterParty, getCounterParties } from "./service";
+import { createContractMock, createCounterParty, getContract, getCounterParties, updateContractContent } from "./service";
 
 const app = new Hono();
 
@@ -19,6 +19,43 @@ app.post("/counter-parties", async (c) => {
 		return c.json(counterParty);
 	} catch (error) {
 		return c.json({ error: "Failed to create counter party" }, 500);
+	}
+});
+
+app.post("/mock", async (c) => {
+	const { content } = await c.req.json();
+	try {
+		const contract = await createContractMock(content);
+		return c.json(contract);
+	} catch (error) {
+		return c.json({ error: "Failed to create mock contract" }, 500);
+	}
+});
+
+app.get("/:id", async (c) => {
+	const { id } = c.req.param();
+	try {
+		const contract = await getContract(id);
+		if (!contract) {
+			return c.json({ error: "Contract not found" }, 404);
+		}
+		return c.json(contract);
+	} catch (error) {
+		return c.json({ error: "Failed to get contract" }, 500);
+	}
+});
+
+app.put("/:id/content", async (c) => {
+	const { id } = c.req.param();
+	const { content } = await c.req.json();
+	try {
+		const contract = await updateContractContent(id, content);
+		if (!contract) {
+			return c.json({ error: "Contract not found" }, 404);
+		}
+		return c.json(contract);
+	} catch (error) {
+		return c.json({ error: "Failed to update contract content" }, 500);
 	}
 });
 
