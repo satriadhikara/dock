@@ -1,7 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  BadgeCheck,
+  EllipsisVertical,
+  Eye,
+  FileText,
+  Filter,
+  Folder,
+  Lightbulb,
+  Search,
+  Signature,
+  Upload,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -11,304 +37,317 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Folder,
-  FileText,
-  Filter,
-  Upload,
-  X,
-  Search,
-  Eye,
-  CheckCircle,
-  FileSignature,
-  Bell,
-  BadgeCheck,
-  Signature,
-  Lightbulb,
-} from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+
+const statusColors: Record<string, string> = {
+  Draft: "bg-gray-200 text-gray-700",
+  "On Review": "bg-purple-100 text-purple-600",
+  Negotiating: "bg-orange-100 text-orange-600",
+  Active: "bg-blue-100 text-blue-600",
+  Signed: "bg-green-100 text-green-600",
+  Finished: "bg-gray-300 text-gray-700",
+};
+
+type BackendContractStatus =
+  | "Draft"
+  | "On Review"
+  | "Negotiating"
+  | "Active"
+  | "Signed"
+  | "Finished";
+
+type ContractListItem = {
+  id: string;
+  name: string;
+  status: BackendContractStatus;
+  createdAt: string | null;
+  startedAt: string | null;
+  initialEndDate: string | null;
+  counterPartyName: string | null;
+  ownerName: string | null;
+  ownerImage: string | null;
+  type: "BuiltIn" | "Imported";
+};
+
+const formatDate = (value: string | null) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
+const getInitials = (value: string | null) => {
+  if (!value) return "--";
+  const [first = "", second = ""] = value.split(" ");
+  return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
+};
 
 export default function RepositoryPage() {
+  const apiBaseUrl = useMemo(() => process.env.NEXT_PUBLIC_API_URL, []);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilters, setStatusFilters] = useState<string[]>([]);
-  const [typeFilter, setTypeFilter] = useState<string[]>([]);
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  const [data, setData] = useState([
-    {
-      type: "folder",
-      name: "Folder-1",
-      counterparty: "",
-      status: "",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "",
-      end: "",
-    },
-    {
-      type: "folder",
-      name: "Folder-2",
-      counterparty: "",
-      status: "",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "",
-      end: "",
-    },
-    {
-      type: "file",
-      name: "Contract-1",
-      counterparty: "Pelindo",
-      status: "Draft",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "01/10/2025",
-      end: "",
-    },
-    {
-      type: "file",
-      name: "Contract-2",
-      counterparty: "Pelindo",
-      status: "Draft",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "01/10/2025",
-      end: "",
-    },
-    {
-      type: "file",
-      name: "Contract-2",
-      counterparty: "PT XYZ",
-      status: "On review",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "26/09/2025",
-      end: "26/09/2027",
-    },
-    {
-      type: "file",
-      name: "Contract-2",
-      counterparty: "PT ABC",
-      status: "Negotiating",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "28/09/2025",
-      end: "28/09/2029",
-    },
-    {
-      type: "file",
-      name: "Contract-2",
-      counterparty: "PT LMN",
-      status: "Negotiating",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "28/09/2025",
-      end: "28/09/2029",
-    },
-    {
-      type: "file",
-      name: "Contract-1",
-      counterparty: "Z Agency",
-      status: "Active",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "01/10/2025",
-      end: "",
-    },
-    {
-      type: "file",
-      name: "Contract-1",
-      counterparty: "Pelindo",
-      status: "Active",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "01/10/2025",
-      end: "",
-    },
-    {
-      type: "file",
-      name: "Contract-1",
-      counterparty: "Pelindo",
-      status: "Signed",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "01/10/2025",
-      end: "",
-    },
-    {
-      type: "file",
-      name: "Contract-1",
-      counterparty: "Pelindo",
-      status: "Finished",
-      owner: "Andhika Fadillah",
-      created: "26/09/2025",
-      start: "01/10/2025",
-      end: "",
-    },
-  ]);
-
-  const statusColors: Record<string, string> = {
-    Draft: "bg-gray-200 text-gray-700",
-    "On review": "bg-purple-100 text-purple-600",
-    Negotiating: "bg-orange-100 text-orange-600",
-    Active: "bg-blue-100 text-blue-600",
-    Signed: "bg-green-100 text-green-600",
-    Finished: "bg-gray-300 text-gray-700",
-  };
-
-  // Filters
-  const uniqueStatuses = Array.from(
-    new Set(data.map((item) => item.status).filter(Boolean)),
+  const [statusFilters, setStatusFilters] = useState<BackendContractStatus[]>(
+    [],
   );
-  const uniqueTypes = Array.from(new Set(data.map((item) => item.type)));
+  const [typeFilters, setTypeFilters] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [data, setData] = useState<ContractListItem[]>([]);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const filteredData = data.filter((row) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      row.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.counterparty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      row.owner.toLowerCase().includes(searchTerm.toLowerCase());
+  const {
+    data: queryData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery<ContractListItem[], Error>({
+    queryKey: ["contracts", "repository"],
+    enabled: Boolean(apiBaseUrl),
+    queryFn: async () => {
+      if (!apiBaseUrl) {
+        throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+      }
 
-    const matchesStatus =
-      statusFilters.length === 0 ||
-      (row.status && statusFilters.includes(row.status));
+      const response = await fetch(`${apiBaseUrl}/api/contract`, {
+        method: "GET",
+        credentials: "include",
+      });
 
-    const matchesType =
-      typeFilter.length === 0 || typeFilter.includes(row.type);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const message = (body as { error?: string }).error;
+        throw new Error(message ?? "Failed to load repository items");
+      }
 
-    return matchesSearch && matchesStatus && matchesType;
+      return (await response.json()) as ContractListItem[];
+    },
+    staleTime: 1000 * 60,
   });
 
-  const handleStatusFilter = (status: string) => {
+  useEffect(() => {
+    if (queryData) {
+      setData(queryData);
+      setSelectedRows([]);
+    }
+  }, [queryData]);
+
+  useEffect(() => {
+    if (!showDeleteConfirm) {
+      setDeleteError(null);
+    }
+  }, [showDeleteConfirm]);
+
+  const filteredData = useMemo(() => {
+    return data.filter((row) => {
+      const matchesSearch =
+        searchTerm.trim() === "" ||
+        row.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (row.counterPartyName ?? "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (row.ownerName ?? "").toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        statusFilters.length === 0 || statusFilters.includes(row.status);
+
+      const matchesType =
+        typeFilters.length === 0 || typeFilters.includes(row.type);
+
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [data, searchTerm, statusFilters, typeFilters]);
+
+  const uniqueStatuses = useMemo(() => {
+    return Array.from(new Set(data.map((item) => item.status)));
+  }, [data]);
+
+  const uniqueTypes = useMemo(() => {
+    return Array.from(new Set(data.map((item) => item.type)));
+  }, [data]);
+
+  const hasActiveFilters =
+    statusFilters.length > 0 ||
+    typeFilters.length > 0 ||
+    searchTerm.trim() !== "";
+
+  const toggleRow = (id: string) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
+    );
+  };
+
+  const toggleStatus = (status: BackendContractStatus) => {
     setStatusFilters((prev) =>
       prev.includes(status)
-        ? prev.filter((s) => s !== status)
+        ? prev.filter((value) => value !== status)
         : [...prev, status],
     );
   };
 
-  const handleTypeFilter = (type: string) => {
-    setTypeFilter((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+  const toggleType = (type: string) => {
+    setTypeFilters((prev) =>
+      prev.includes(type)
+        ? prev.filter((value) => value !== type)
+        : [...prev, type],
     );
   };
 
   const clearAllFilters = () => {
     setStatusFilters([]);
-    setTypeFilter([]);
+    setTypeFilters([]);
     setSearchTerm("");
   };
 
-  const toggleRow = (index: number) => {
-    setSelectedRows((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
-    );
-  };
-
   const handleDelete = () => {
+    if (selectedRows.length === 0) return;
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = () => {
-    // Get the actual data indices based on filtered data
-    const selectedFilteredIndices = selectedRows;
-    const actualIndicesToDelete: number[] = [];
-
-    selectedFilteredIndices.forEach((filteredIndex) => {
-      const selectedItem = filteredData[filteredIndex];
-      const actualIndex = data.findIndex(
-        (item) =>
-          item.name === selectedItem.name &&
-          item.counterparty === selectedItem.counterparty &&
-          item.created === selectedItem.created &&
-          item.owner === selectedItem.owner,
-      );
-      if (actualIndex !== -1) {
-        actualIndicesToDelete.push(actualIndex);
+  const deleteContractsMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!apiBaseUrl) {
+        throw new Error("NEXT_PUBLIC_API_URL is not configured.");
       }
-    });
 
-    // Remove items from data array
-    setData((prev) =>
-      prev.filter((_, index) => !actualIndicesToDelete.includes(index)),
-    );
+      const response = await fetch(`${apiBaseUrl}/api/contract`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ ids }),
+      });
 
-    // Clear selected rows and hide confirmation
-    setSelectedRows([]);
-    setShowDeleteConfirm(false);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const message = (body as { error?: string }).error;
+        throw new Error(message ?? "Failed to delete contracts");
+      }
+
+      return ids;
+    },
+    onSuccess: (ids) => {
+      setData((prev) => prev.filter((item) => !ids.includes(item.id)));
+      setSelectedRows([]);
+      setShowDeleteConfirm(false);
+    },
+    onError: (mutationError) => {
+      setDeleteError(
+        mutationError instanceof Error
+          ? mutationError.message
+          : "Failed to delete contracts.",
+      );
+    },
+  });
+
+  const confirmDelete = () => {
+    if (deleteContractsMutation.isPending) return;
+    deleteContractsMutation.mutate(selectedRows);
   };
 
   const cancelDelete = () => {
     setShowDeleteConfirm(false);
   };
 
-  const hasActiveFilters =
-    statusFilters.length > 0 || typeFilter.length > 0 || searchTerm !== "";
+  const selectAllVisible = (checked: boolean | "indeterminate") => {
+    if (checked) {
+      setSelectedRows(filteredData.map((item) => item.id));
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
+  if (!apiBaseUrl) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-[#F8FAFC] p-8 text-center">
+        <p className="text-sm text-[#F04438]">
+          NEXT_PUBLIC_API_URL is not configured.
+        </p>
+        <p className="text-sm text-[#576069]">
+          Update your environment configuration and reload the page.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-[#F8FAFC] p-8 text-center">
+        <p className="text-sm text-[#576069]">Loading repository...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-[#F8FAFC] p-8 text-center">
+        <p className="text-sm text-[#F04438]">
+          {error instanceof Error
+            ? error.message
+            : "Failed to load repository."}
+        </p>
+        <Button onClick={() => refetch()} variant="outline">
+          Try again
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>
       <div
-        className={`w-full p-6 space-y-4 bg-[#F8FAFC] ${showDeleteConfirm ? "blur-sm" : ""}`}
+        className={`w-full space-y-4 bg-[#F8FAFC] p-6 ${
+          showDeleteConfirm ? "blur-sm" : ""
+        }`}
       >
-        {/* Top Bar */}
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Repository</h2>
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
                 placeholder="Search"
                 className="w-64 rounded-lg border-gray-300 pl-10"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
             <Button
               variant="outline"
-              className="flex items-center gap-2 rounded-lg text-black cursor-pointer"
+              className="flex items-center gap-2 rounded-lg text-black"
             >
-              <Upload className="w-4 h-4" /> Store a signed document
+              <Upload className="h-4 w-4" /> Store a signed document
             </Button>
-
-            {/* Filter Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className={`flex items-center gap-2 rounded-lg cursor-pointer ${
+                  className={`flex items-center gap-2 rounded-lg ${
                     hasActiveFilters
-                      ? "bg-blue-50 text-blue-600 border-blue-300"
+                      ? "border-blue-300 bg-blue-50 text-blue-600"
                       : "text-black"
                   }`}
                 >
-                  <Filter className="w-4 h-4" />
+                  <Filter className="h-4 w-4" />
                   Filter
-                  {hasActiveFilters && (
+                  {hasActiveFilters ? (
                     <Badge
                       variant="secondary"
                       className="ml-1 px-1.5 py-0.5 text-xs"
                     >
-                      {statusFilters.length + typeFilter.length}
+                      {statusFilters.length + typeFilters.length}
                     </Badge>
-                  )}
+                  ) : null}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuContent align="end" className="w-56">
                 <div className="flex items-center justify-between p-2">
                   <span className="text-sm font-medium">Filters</span>
-                  {hasActiveFilters && (
+                  {hasActiveFilters ? (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -317,11 +356,9 @@ export default function RepositoryPage() {
                     >
                       Clear all
                     </Button>
-                  )}
+                  ) : null}
                 </div>
-
                 <DropdownMenuSeparator />
-
                 <DropdownMenuGroup>
                   <div className="px-2 py-1.5 text-xs font-medium text-gray-500">
                     Type
@@ -329,17 +366,14 @@ export default function RepositoryPage() {
                   {uniqueTypes.map((type) => (
                     <DropdownMenuCheckboxItem
                       key={type}
-                      checked={typeFilter.includes(type)}
-                      onCheckedChange={() => handleTypeFilter(type)}
-                      className="capitalize"
+                      checked={typeFilters.includes(type)}
+                      onCheckedChange={() => toggleType(type)}
                     >
                       {type}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuGroup>
-
                 <DropdownMenuSeparator />
-
                 <DropdownMenuGroup>
                   <div className="px-2 py-1.5 text-xs font-medium text-gray-500">
                     Status
@@ -348,7 +382,7 @@ export default function RepositoryPage() {
                     <DropdownMenuCheckboxItem
                       key={status}
                       checked={statusFilters.includes(status)}
-                      onCheckedChange={() => handleStatusFilter(status)}
+                      onCheckedChange={() => toggleStatus(status)}
                     >
                       {status}
                     </DropdownMenuCheckboxItem>
@@ -356,23 +390,25 @@ export default function RepositoryPage() {
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
+            <div className="rounded-[8px] border border-[#E3E7EA] bg-white p-2.5">
+              <EllipsisVertical className="h-[18px] w-[18px]" fill="#576069" />
+            </div>
           </div>
         </div>
 
-        {/* Active Filters */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 items-center">
+        {hasActiveFilters ? (
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-gray-600">Active filters:</span>
-            {typeFilter.map((type) => (
+            {typeFilters.map((type) => (
               <Badge
                 key={`type-${type}`}
                 variant="secondary"
-                className="flex items-center gap-1 capitalize"
+                className="flex items-center gap-1"
               >
                 Type: {type}
                 <X
-                  className="w-3 h-3 cursor-pointer hover:bg-gray-300 rounded"
-                  onClick={() => handleTypeFilter(type)}
+                  className="h-3 w-3 cursor-pointer rounded hover:bg-gray-300"
+                  onClick={() => toggleType(type)}
                 />
               </Badge>
             ))}
@@ -384,39 +420,45 @@ export default function RepositoryPage() {
               >
                 Status: {status}
                 <X
-                  className="w-3 h-3 cursor-pointer hover:bg-gray-300 rounded"
-                  onClick={() => handleStatusFilter(status)}
+                  className="h-3 w-3 cursor-pointer rounded hover:bg-gray-300"
+                  onClick={() => toggleStatus(status)}
                 />
               </Badge>
             ))}
-            {searchTerm && (
+            {searchTerm ? (
               <Badge variant="secondary" className="flex items-center gap-1">
                 Search: "{searchTerm}"
                 <X
-                  className="w-3 h-3 cursor-pointer hover:bg-gray-300 rounded"
+                  className="h-3 w-3 cursor-pointer rounded hover:bg-gray-300"
                   onClick={() => setSearchTerm("")}
                 />
               </Badge>
-            )}
+            ) : null}
           </div>
-        )}
+        ) : null}
 
-        {/* Results count */}
         <div className="text-sm text-gray-600">
           Showing {filteredData.length} of {data.length} items
         </div>
 
-        {/* Table */}
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-8"></TableHead>
+              <TableHead className="w-8">
+                <Checkbox
+                  checked={
+                    filteredData.length > 0 &&
+                    filteredData.every((item) => selectedRows.includes(item.id))
+                  }
+                  onCheckedChange={selectAllVisible}
+                />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Counterparty</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Creation date</TableHead>
-              <TableHead>Start Date</TableHead>
+              <TableHead>Start date</TableHead>
               <TableHead>Initial end date</TableHead>
             </TableRow>
           </TableHeader>
@@ -425,143 +467,151 @@ export default function RepositoryPage() {
               <TableRow>
                 <TableCell
                   colSpan={8}
-                  className="text-center py-8 text-gray-500"
+                  className="py-8 text-center text-gray-500"
                 >
                   No items found matching your filters
                 </TableCell>
               </TableRow>
             ) : (
-              filteredData.map((row, i) => (
-                <TableRow key={i}>
+              filteredData.map((row) => (
+                <TableRow key={row.id}>
                   <TableCell>
                     <Checkbox
-                      checked={selectedRows.includes(i)}
-                      onCheckedChange={() => toggleRow(i)}
+                      checked={selectedRows.includes(row.id)}
+                      onCheckedChange={() => toggleRow(row.id)}
                     />
                   </TableCell>
                   <TableCell className="flex items-center gap-2">
-                    {row.type === "folder" ? (
-                      <Folder className="w-4 h-4 text-blue-500" />
+                    {row.type === "Imported" ? (
+                      <Folder className="h-4 w-4 text-blue-500" />
                     ) : (
-                      <FileText className="w-4 h-4 text-gray-500" />
+                      <FileText className="h-4 w-4 text-gray-500" />
                     )}
                     {row.name}
                   </TableCell>
-                  <TableCell>{row.counterparty}</TableCell>
+                  <TableCell>{row.counterPartyName ?? "Unknown"}</TableCell>
                   <TableCell>
-                    {row.status && (
-                      <Badge
-                        className={`${statusColors[row.status]} rounded-full px-2 py-0.5`}
-                      >
-                        {row.status}
-                      </Badge>
-                    )}
+                    <Badge
+                      className={`${
+                        statusColors[row.status] ?? "bg-gray-200 text-gray-700"
+                      } rounded-full px-2 py-0.5`}
+                    >
+                      {row.status}
+                    </Badge>
                   </TableCell>
                   <TableCell className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className="bg-orange-400 text-white text-xs">
-                        A
+                      {row.ownerImage ? (
+                        <AvatarImage
+                          src={row.ownerImage}
+                          alt={row.ownerName ?? "Owner"}
+                          className="object-cover"
+                          style={{ width: "100%", height: "100%" }}
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : null}
+                      <AvatarFallback className="bg-orange-400 text-xs text-white">
+                        {getInitials(row.ownerName)}
                       </AvatarFallback>
                     </Avatar>
-                    {row.owner}
+                    {row.ownerName ?? "Unknown"}
                   </TableCell>
-                  <TableCell>{row.created}</TableCell>
-                  <TableCell>{row.start}</TableCell>
-                  <TableCell>{row.end}</TableCell>
+                  <TableCell>{formatDate(row.createdAt)}</TableCell>
+                  <TableCell>{formatDate(row.startedAt)}</TableCell>
+                  <TableCell>{formatDate(row.initialEndDate)}</TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
 
-        {/* Bottom Action Bar */}
-        {selectedRows.length > 0 && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-[#1E609E] shadow-lg border rounded-lg px-4 py-2 z-50">
+        {selectedRows.length > 0 ? (
+          <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg border bg-[#1E609E] px-4 py-2 shadow-lg">
             <span className="text-sm text-white">
               {selectedRows.length} selected
             </span>
-
-            <div className="border-r border-l pl-3 pr-3 border-[#F8FAFC]  ">
+            <div className="border-l border-r border-[#F8FAFC] px-3">
               <Button
                 variant="default"
                 size="sm"
-                className="bg-[#1E609E] hover:bg-[#1A5490] cursor-pointer"
+                className="bg-[#1E609E] hover:bg-[#1A5490]"
                 onClick={handleDelete}
               >
                 Delete
               </Button>
             </div>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="default"
                   size="sm"
-                  className="bg-[#1E609E] hover:bg-[#1A5490] cursor-pointer"
+                  className="bg-[#1E609E] hover:bg-[#1A5490]"
                 >
                   Start Workflow
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem className="border-b border-gray-100">
-                  <div className="w-6 h-6 bg-[#D1E9FF] rounded-md flex items-center justify-center mr-2">
-                    <Eye className="w-4 h-4 text-[#2E90FA]" />
+                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#D1E9FF]">
+                    <Eye className="h-4 w-4 text-[#2E90FA]" />
                   </div>
                   For Review
                 </DropdownMenuItem>
                 <DropdownMenuItem className="border-b border-gray-100">
-                  <div className="w-6 h-6 bg-[#ECFDF3] rounded-md flex items-center justify-center mr-2">
-                    <BadgeCheck className="w-4 h-4 text-[#12B76A]" />
+                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#ECFDF3]">
+                    <BadgeCheck className="h-4 w-4 text-[#12B76A]" />
                   </div>
                   For Approval
                 </DropdownMenuItem>
                 <DropdownMenuItem className="border-b border-gray-100">
-                  <div className="w-6 h-6 bg-[#EBE9FE] rounded-md flex items-center justify-center mr-2">
-                    <Signature className="w-4 h-4 text-[#7A5AF8]" />
+                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#EBE9FE]">
+                    <Signature className="h-4 w-4 text-[#7A5AF8]" />
                   </div>
                   For Signage
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <div className="w-6 h-6 bg-[#FEF0C7] rounded-md flex items-center justify-center mr-2">
-                    <Lightbulb className="w-4 h-4 text-[#F79009]" />
+                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#FEF0C7]">
+                    <Lightbulb className="h-4 w-4 text-[#F79009]" />
                   </div>
                   For Acknowledge
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        )}
+        ) : null}
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl border">
-            <h3 className="text-lg font-semibold mb-2">Confirm Delete</h3>
-            <p className="text-gray-600 mb-4">
+      {showDeleteConfirm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="mx-4 w-full max-w-md rounded-lg border bg-white p-6 shadow-2xl">
+            <h3 className="mb-2 text-lg font-semibold">Confirm Delete</h3>
+            <p className="mb-4 text-gray-600">
               Are you sure you want to delete {selectedRows.length} selected
               item{selectedRows.length > 1 ? "s" : ""}? This action cannot be
               undone.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3">
               <Button
                 variant="outline"
                 onClick={cancelDelete}
-                className="cursor-pointer"
+                disabled={deleteContractsMutation.isPending}
               >
                 Cancel
               </Button>
               <Button
                 variant="destructive"
                 onClick={confirmDelete}
-                className="bg-red-600 hover:bg-red-700 cursor-pointer"
+                disabled={deleteContractsMutation.isPending}
               >
-                Delete
+                {deleteContractsMutation.isPending ? "Deleting..." : "Delete"}
               </Button>
             </div>
+            {deleteError ? (
+              <p className="mt-3 text-sm text-[#F04438]">{deleteError}</p>
+            ) : null}
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
