@@ -1,7 +1,9 @@
 import { Hono } from "hono";
 import auth from "./internal/auth/controller";
 import chat from "./internal/chat/controller";
+import contract from "./internal/contract/controller";
 import { cors } from "hono/cors";
+import { logger } from "hono/logger";
 import { auth as authLib } from "./lib/auth";
 
 const app = new Hono<{
@@ -11,11 +13,13 @@ const app = new Hono<{
 	};
 }>();
 
+app.use(logger());
+
 app.use(
 	"/*",
 	cors({
 		origin: Bun.env.CLIENT_URL as string,
-		allowHeaders: ["Content-Type", "Authorization"],
+		allowHeaders: ["Content-Type", "Authorization", "User-Agent"],
 		allowMethods: ["POST", "GET", "OPTIONS"],
 		exposeHeaders: ["Content-Length"],
 		maxAge: 600,
@@ -41,8 +45,10 @@ app.get("/health", (c) => {
 
 app.route("/api/auth", auth);
 app.route("/api/chat", chat);
+app.route("/api/contract", contract);
 
 export default {
-	port: Bun.env.PORT,
+	port: Bun.env.PORT ? Number(Bun.env.PORT) : undefined,
+	idleTimeout: 60,
 	fetch: app.fetch,
 };

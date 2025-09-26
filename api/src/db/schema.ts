@@ -1,4 +1,12 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import {
+	pgTable,
+	text,
+	timestamp,
+	boolean,
+	pgEnum,
+	jsonb,
+	varchar,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -66,4 +74,59 @@ export const verification = pgTable("verification", {
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date())
 		.notNull(),
+});
+
+export const contractTypeEnum = pgEnum("contract_type", [
+	"BuiltIn",
+	"Imported",
+]);
+
+export const contractStatusEnum = pgEnum("status", [
+	"Draft",
+	"On Review",
+	"Negotiating",
+	"Active",
+	"Signed",
+	"Finished",
+]);
+
+export const counterParty = pgTable("counter_party", {
+	id: text("id").primaryKey(),
+	name: text("name").notNull(),
+	email: text("email"),
+	phone: text("phone"),
+	address: text("address"),
+});
+
+export const contract = pgTable("contract", {
+	id: text("id").primaryKey(),
+	name: text("name").notNull(),
+	counterPartyId: text("counter_party_id")
+		.notNull()
+		.references(() => counterParty.id, { onDelete: "cascade" }),
+	status: contractStatusEnum().notNull(),
+	ownerId: text("owner_id")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	type: contractTypeEnum("type").notNull(),
+	createdAt: timestamp("created_at")
+		.notNull()
+		.$defaultFn(() => new Date()),
+	startedAt: timestamp("started_at"),
+	initialEndDate: timestamp("initial_end_date"),
+	content: jsonb("content"),
+});
+
+export const contractAsset = pgTable("contract_asset", {
+	id: text("id").primaryKey(),
+	contractId: text("contract_id")
+		.notNull()
+		.references(() => contract.id, { onDelete: "cascade" }),
+	storageKey: text("storage_key").notNull(),
+	fileName: text("file_name").notNull(),
+	mimeType: varchar("mime_type", { length: 255 }).notNull(),
+	size: text("size"),
+	createdAt: timestamp("created_at")
+		.notNull()
+		.$defaultFn(() => new Date()),
 });

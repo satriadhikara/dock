@@ -4,7 +4,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 const app = new Hono();
 
-export const maxDuration = 30;
+// export const maxDuration = 30;
 
 // POST / -> streams UIMessage protocol for DefaultChatTransport
 app.post("/", async (c: any) => {
