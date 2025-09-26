@@ -20,7 +20,7 @@ app.use(
 	cors({
 		origin: Bun.env.CLIENT_URL as string,
 		allowHeaders: ["Content-Type", "Authorization", "User-Agent"],
-		allowMethods: ["POST", "GET", "OPTIONS"],
+		allowMethods: ["POST", "GET", "OPTIONS", "PUT"],
 		exposeHeaders: ["Content-Length"],
 		maxAge: 600,
 		credentials: true,
