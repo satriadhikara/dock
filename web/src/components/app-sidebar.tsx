@@ -32,6 +32,7 @@ import {
   Pencil,
   CloudUpload,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const items = [
   {
@@ -76,10 +77,11 @@ const items = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-
+  const router = useRouter();
   const handleStartDrafting = () => {
     // Add your start drafting logic here
     console.log("Start drafting clicked");
+    router.push("/contracts/new");
   };
 
   const handleStoreSignedDoc = () => {
