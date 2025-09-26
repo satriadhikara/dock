@@ -19,7 +19,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -83,7 +88,7 @@ export function AppSidebar() {
   const { data: session } = useSession();
   const router = useRouter();
   const [storeDocModalOpen, setStoreDocModalOpen] = useState(false);
-  
+
   const handleStartDrafting = () => {
     // Navigate to start drafting page
     router.push("/contracts/new");
@@ -255,7 +260,9 @@ export function AppSidebar() {
               <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-gray-500">
                 <UploadCloud className="w-10 h-10 mb-2" />
                 <p>Drag and Drop files, or browse</p>
-                <p className="text-xs text-gray-400">Allowed files: .docx, .pdf</p>
+                <p className="text-xs text-gray-400">
+                  Allowed files: .docx, .pdf
+                </p>
               </div>
             </TabsContent>
 
@@ -272,7 +279,9 @@ export function AppSidebar() {
               <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-gray-500">
                 <UploadCloud className="w-10 h-10 mb-2" />
                 <p>Drag and Drop files, or browse</p>
-                <p className="text-xs text-gray-400">Allowed files: .docx, .pdf</p>
+                <p className="text-xs text-gray-400">
+                  Allowed files: .docx, .pdf
+                </p>
               </div>
             </TabsContent>
           </Tabs>

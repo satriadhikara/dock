@@ -67,7 +67,6 @@ export default function MantaPage() {
     const isStreaming = status === "streaming";
     return (
       <form onSubmit={handleSubmit} className={wrapperClass}>
-
         {/* Text input with padding to accommodate buttons */}
         <Input
           value={message}
@@ -97,7 +96,6 @@ export default function MantaPage() {
             <ArrowUp className="h-[24px] w-[24px]" />
           )}
         </button>
-
       </form>
     );
   };
@@ -116,12 +114,7 @@ export default function MantaPage() {
       {/* logo and subtitle (only before first message) */}
       {messages.length === 0 && (
         <div className="mt-40 flex flex-col justify-center items-center">
-          <Image 
-            src="/mantaChat.png" 
-            alt="Manta" 
-            width={100} 
-            height={100}
-          />
+          <Image src="/mantaChat.png" alt="Manta" width={100} height={100} />
           <h1 className="text-[#939A9F] text-[16px] mt-4 mb-2">
             Your AI agent for Contract Management
           </h1>
@@ -151,7 +144,9 @@ export default function MantaPage() {
                   key={m.id}
                   className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                 >
-                  <div className={`flex items-start gap-2 ${isUser ? "flex-row-reverse" : ""}`}>
+                  <div
+                    className={`flex items-start gap-2 ${isUser ? "flex-row-reverse" : ""}`}
+                  >
                     {/* Avatar */}
                     <div className="h-8 w-8 flex-shrink-0">
                       {isUser ? (
