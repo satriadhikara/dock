@@ -20,7 +20,11 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   ];
 
   // Routes that should not show sidebar (including dynamic routes)
-  const noSidebarRoutePrefixes = ["/contracts/new", "/contracts/view"];
+  const noSidebarRoutePrefixes = [
+    "/contracts/new",
+    "/contracts/view",
+    "/contracts/review",
+  ];
 
   const showSidebar =
     !noSidebarRoutes.includes(pathname) &&

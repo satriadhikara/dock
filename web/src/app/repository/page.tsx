@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
   EllipsisVertical,
@@ -88,6 +89,7 @@ const getInitials = (value: string | null) => {
 
 export default function RepositoryPage() {
   const apiBaseUrl = useMemo(() => process.env.NEXT_PUBLIC_API_URL, []);
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilters, setStatusFilters] = useState<BackendContractStatus[]>(
     [],
@@ -474,11 +476,23 @@ export default function RepositoryPage() {
               </TableRow>
             ) : (
               filteredData.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  onClick={() => router.push(`/contracts/view/${row.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      router.push(`/contracts/view/${row.id}`);
+                    }
+                  }}
+                  tabIndex={0}
+                  className="cursor-pointer transition hover:bg-gray-50 focus:bg-gray-100"
+                >
                   <TableCell>
                     <Checkbox
                       checked={selectedRows.includes(row.id)}
                       onCheckedChange={() => toggleRow(row.id)}
+                      onClick={(event) => event.stopPropagation()}
                     />
                   </TableCell>
                   <TableCell className="flex items-center gap-2">
