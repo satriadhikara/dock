@@ -29,21 +29,23 @@ export const createCounterParty = async (name: string) => {
 	}
 };
 
-
-export const createContractMock = async (content: any) => {
+export const createContractMock = async (name: string, content: any) => {
 	try {
 		const id = Bun.randomUUIDv7();
 
-		const [contractResult] = await db.insert(contract).values({
-			id,
-			name: "Mock Contract",
-			counterPartyId: "0199865b-ef15-7000-930a-f5273d1b0bc2",
-			status: "Draft",
-			ownerId: "M1dVCxAvPjV28VOMstVWpbxTgFkh5lRP",
-			type: "BuiltIn",
-			createdAt: new Date(),
-			content: content,
-		}).returning();
+		const [contractResult] = await db
+			.insert(contract)
+			.values({
+				id,
+				name,
+				counterPartyId: "0199865b-ef15-7000-930a-f5273d1b0bc2",
+				status: "Draft",
+				ownerId: "M1dVCxAvPjV28VOMstVWpbxTgFkh5lRP",
+				type: "BuiltIn",
+				createdAt: new Date(),
+				content: content,
+			})
+			.returning();
 
 		return contractResult;
 	} catch (error) {
@@ -70,7 +72,10 @@ export const updateContractContent = async (id: string, content: any) => {
 
 export const getContract = async (id: string) => {
 	try {
-		const [contractResult] = await db.select().from(contract).where(eq(contract.id, id));
+		const [contractResult] = await db
+			.select()
+			.from(contract)
+			.where(eq(contract.id, id));
 		return contractResult;
 	} catch (error) {
 		console.error(error);
