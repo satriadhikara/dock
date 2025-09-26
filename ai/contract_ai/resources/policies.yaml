@@ -1,0 +1,11 @@
+- id: policy.governing_law.required
+  title: Governing law must be present
+  severity: medium
+  requirement: Contract must include a governing law clause
+  field_required: governing_law
+
+- id: policy.limitation_of_liability.required
+  title: Limitation of liability clause required
+  severity: high
+  requirement: Contract must contain limitation of liability language
+  clause_contains: limitation of liability

@@ -1,0 +1,16 @@
+{{ contract_title or "Master Services Agreement" }}
+
+This Agreement is made between {{ party_a }} ("Party A") and {{ party_b }} ("Party B").
+
+1. Scope
+The parties agree to cooperate under the terms and conditions set forth herein.
+
+2. Clauses
+{% for name, text in clauses.items() %}
+2.{{ loop.index }} {{ name | replace('_',' ') | title }}
+{{ text }}
+
+{% endfor %}
+
+3. Signatures
+Authorized representatives of both parties have executed this Agreement as of the Effective Date.
