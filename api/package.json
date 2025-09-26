@@ -1,12 +1,20 @@
 {
-  "name": "api",
-  "scripts": {
-    "dev": "bun run --hot src/index.ts"
-  },
-  "dependencies": {
-    "hono": "^4.9.8"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  }
+	"name": "api",
+	"scripts": {
+		"dev": "bun run --hot src/index.ts",
+		"format": "bunx biome format --write"
+	},
+	"dependencies": {
+		"better-auth": "^1.3.18",
+		"dotenv": "^17.2.2",
+		"drizzle-orm": "^0.44.5",
+		"hono": "^4.9.8",
+		"pg": "^8.16.3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.2.4",
+		"@types/bun": "^1.2.22",
+		"@types/pg": "^8.15.5",
+		"drizzle-kit": "^0.31.4"
+	}
 }
