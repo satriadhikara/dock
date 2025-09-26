@@ -12,11 +12,26 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "@/lib/auth-client";
+import {
+  FilePlus,
+  FileUp,
+  ChevronDown,
+  Plus,
+  Pencil,
+  CloudUpload,
+} from "lucide-react";
 
 const items = [
   {
@@ -61,9 +76,20 @@ const items = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  const handleStartDrafting = () => {
+    // Add your start drafting logic here
+    console.log("Start drafting clicked");
+  };
+
+  const handleStoreSignedDoc = () => {
+    // Add your store signed document logic here
+    console.log("Store signed document clicked");
+  };
+
   return (
     <Sidebar className="border-r bg-white">
-      <SidebarContent className="flex flex-col justify-between h-full">
+      <SidebarContent className="flex flex-col justify-between h-full bg-white">
         {/* Top Section */}
         <div>
           {/* Logo */}
@@ -72,11 +98,57 @@ export function AppSidebar() {
             <span className="text-[#4EB4E1] font-semibold text-lg">DOCK</span>
           </div>
 
-          {/* New Contract Button */}
+          {/* New Contract Button with Dropdown */}
           <div className="px-4">
-            <Button className="w-full rounded-full bg-[#4EB4E1] hover:bg-[#42A5F5] text-white cursor-pointer">
-              + New Contract
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="flex items-center gap-4 w-full rounded-full bg-[#4EB4E1] hover:bg-[#42A5F5] text-white cursor-pointer py-4 px-6 text-base font-medium h-12">
+                  <Plus className="w-6 h-6" />
+                  <span> New Contract</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-56 ml-4"
+                align="start"
+                sideOffset={4}
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={handleStartDrafting}
+                    className="cursor-pointer flex items-start py-2"
+                  >
+                    <div className="w-10 h-10 bg-[#ECFDF3] rounded-lg flex items-center justify-center mr-2">
+                      <Pencil className="w-7 h-7 text-[#12B76A]" />
+                    </div>
+                    <div className="flex flex-col">
+                      <p className="text-[14px] text-[#192632]">
+                        Start Drafting
+                      </p>
+                      <p className="text-[10px] text-[#192632]">
+                        From a template or external doc
+                      </p>
+                    </div>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={handleStoreSignedDoc}
+                    className="cursor-pointer flex items-start py-2"
+                  >
+                    <div className="w-10 h-10 bg-[#E0EAFF] rounded-lg flex items-center justify-center mr-2">
+                      <CloudUpload className="w-10 h-10 text-[#444CE7]" />
+                    </div>
+                    <div className="flex flex-col">
+                      <p className="text-[14px] text-[#192632]">
+                        Store a Signed Doc
+                      </p>
+                      <p className="text-[10px] text-[#192632]">
+                        Upload signed PDF only
+                      </p>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Menu */}
@@ -133,7 +205,7 @@ export function AppSidebar() {
         </div>
 
         {/* Footer / User Info */}
-        <SidebarFooter className="p-4 border-t">
+        <SidebarFooter className="p-4 border-t bg-white">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 flex items-center justify-center rounded-full bg-yellow-400 text-white font-bold">
               {session?.user?.image ? (
