@@ -357,19 +357,6 @@ export default function RepositoryPage() {
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 rounded-lg text-black cursor-pointer"
-          >
-            <FolderPlus className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 rounded-lg text-black cursor-pointer"
-          >
-            <EllipsisVertical className="w-4 h-4" />
-          </Button>
         </div>
       </div>
 
