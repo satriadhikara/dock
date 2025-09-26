@@ -1,6 +1,34 @@
-import { eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { db } from "../../db";
-import { counterParty, contract } from "../../db/schema";
+import { contract, counterParty, user } from "../../db/schema";
+
+export const getContracts = async () => {
+	try {
+		const contracts = await db
+			.select({
+				id: contract.id,
+				name: contract.name,
+				status: contract.status,
+				createdAt: contract.createdAt,
+				type: contract.type,
+				startedAt: contract.startedAt,
+				initialEndDate: contract.initialEndDate,
+				ownerId: contract.ownerId,
+				ownerName: user.name,
+				ownerImage: user.image,
+				counterPartyId: contract.counterPartyId,
+				counterPartyName: counterParty.name,
+			})
+			.from(contract)
+			.leftJoin(counterParty, eq(contract.counterPartyId, counterParty.id))
+			.leftJoin(user, eq(contract.ownerId, user.id))
+			.orderBy(desc(contract.createdAt));
+		return contracts;
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
+};
 
 export const getCounterParties = async () => {
 	try {
@@ -29,7 +57,11 @@ export const createCounterParty = async (name: string) => {
 	}
 };
 
-export const createContractMock = async (name: string, content: any) => {
+export const createContractMock = async (
+	name: string,
+	counterPartyId: string,
+	content: unknown,
+) => {
 	try {
 		const id = Bun.randomUUIDv7();
 
@@ -38,7 +70,7 @@ export const createContractMock = async (name: string, content: any) => {
 			.values({
 				id,
 				name,
-				counterPartyId: "0199865b-ef15-7000-930a-f5273d1b0bc2",
+				counterPartyId,
 				status: "Draft",
 				ownerId: "M1dVCxAvPjV28VOMstVWpbxTgFkh5lRP",
 				type: "BuiltIn",
@@ -54,7 +86,7 @@ export const createContractMock = async (name: string, content: any) => {
 	}
 };
 
-export const updateContractContent = async (id: string, content: any) => {
+export const updateContractContent = async (id: string, content: unknown) => {
 	try {
 		const [contractResult] = await db
 			.update(contract)
@@ -77,6 +109,23 @@ export const getContract = async (id: string) => {
 			.from(contract)
 			.where(eq(contract.id, id));
 		return contractResult;
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
+};
+
+export const deleteContracts = async (ids: string[]) => {
+	if (ids.length === 0) {
+		return [] as { id: string }[];
+	}
+
+	try {
+		const deletedContracts = await db
+			.delete(contract)
+			.where(inArray(contract.id, ids))
+			.returning({ id: contract.id });
+		return deletedContracts;
 	} catch (error) {
 		console.error(error);
 		throw error;

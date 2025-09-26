@@ -1,140 +1,198 @@
-import { Input } from "@/components/ui/input";
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { EllipsisVertical, Search } from "lucide-react";
-import { ContractStatusHeaderCard } from "@/components/contract-status-header-card";
+import { useMemo } from "react";
 import { ContractCard } from "@/components/contract-card";
+import { ContractStatusHeaderCard } from "@/components/contract-status-header-card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+type BackendContractStatus =
+  | "Draft"
+  | "On Review"
+  | "Negotiating"
+  | "Active"
+  | "Signed"
+  | "Finished";
+
+type ContractListItem = {
+  id: string;
+  name: string;
+  status: BackendContractStatus;
+  createdAt: string | null;
+  counterPartyName: string | null;
+};
+
+type ColumnDefinition = {
+  key: "Draft" | "On Review" | "Negotiating" | "Signing";
+  label: string;
+  statuses: BackendContractStatus[];
+};
+
+const COLUMNS: ColumnDefinition[] = [
+  { key: "Draft", label: "Draft", statuses: ["Draft"] },
+  { key: "On Review", label: "On Review", statuses: ["On Review"] },
+  { key: "Negotiating", label: "Negotiating", statuses: ["Negotiating"] },
+  { key: "Signing", label: "Signing", statuses: ["Signed", "Active"] },
+];
+
+const formatDate = (value: string | null) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
 export default function ContractsPage() {
+  const apiBaseUrl = useMemo(() => process.env.NEXT_PUBLIC_API_URL, []);
+
+  const { data, isLoading, isError, error, refetch } = useQuery<
+    ContractListItem[],
+    Error
+  >({
+    queryKey: ["contracts"],
+    enabled: Boolean(apiBaseUrl),
+    queryFn: async () => {
+      if (!apiBaseUrl) {
+        throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/contract`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const message = (body as { error?: string }).error;
+        throw new Error(message ?? "Failed to load contracts");
+      }
+
+      return (await response.json()) as ContractListItem[];
+    },
+    staleTime: 1000 * 60,
+  });
+
+  const groupedContracts = useMemo(() => {
+    const initial = Object.fromEntries(
+      COLUMNS.map((column) => [column.key, [] as ContractListItem[]]),
+    ) as Record<ColumnDefinition["key"], ContractListItem[]>;
+
+    if (!data) {
+      return initial;
+    }
+
+    return data.reduce((acc, contract) => {
+      const column = COLUMNS.find((col) =>
+        col.statuses.includes(contract.status),
+      );
+
+      if (!column) {
+        return acc;
+      }
+
+      acc[column.key] = [...acc[column.key], contract];
+      return acc;
+    }, initial);
+  }, [data]);
+
+  if (!apiBaseUrl) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-[#F8FAFC] p-8 text-center">
+        <p className="text-sm text-[#F04438]">
+          NEXT_PUBLIC_API_URL is not configured.
+        </p>
+        <p className="text-sm text-[#576069]">
+          Update your environment configuration and reload the page.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-[#F8FAFC] p-8 text-center">
+        <p className="text-sm text-[#576069]">Loading contracts...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-[#F8FAFC] p-8 text-center">
+        <p className="text-sm text-[#F04438]">
+          {error instanceof Error ? error.message : "Failed to load contracts."}
+        </p>
+        <Button onClick={() => refetch()} variant="outline">
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-screen w-full p-8 flex flex-col overflow-hidden bg-[#F8FAFC]">
-      <header className="flex justify-between items-center mb-6">
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-[#F8FAFC] p-8">
+      <header className="mb-6 flex items-center justify-between">
         <h1 className="font-bold text-black">Contracts on going</h1>
 
         <div className="flex items-center gap-2">
           <div className="w-full">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
-                className="w-[292px] pl-10 rounded-[50px] text-[#A7ADB3] bg-white py-2"
+                className="w-[292px] bg-white py-2 pl-10 text-[#A7ADB3]"
                 placeholder="Search"
+                disabled
               />
             </div>
           </div>
 
-          <div className="bg-white border border-[#E3E7EA] p-2.5 rounded-[8px]">
-            <EllipsisVertical className="w-[18px] h-[18px]" fill="#576069" />
+          <div className="rounded-[8px] border border-[#E3E7EA] bg-white p-2.5">
+            <EllipsisVertical className="h-[18px] w-[18px]" fill="#576069" />
           </div>
         </div>
       </header>
 
-      <main className="flex-1 w-full overflow-hidden min-h-0 flex flex-row justify-between gap-4">
-        <div className="w-full flex flex-col h-full min-h-0">
-          <ContractStatusHeaderCard status="Draft" count={20} />
-          <ScrollArea className="h-full">
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-          </ScrollArea>
-        </div>
+      <main className="flex-1 min-h-0 w-full overflow-hidden">
+        <div className="flex h-full min-h-0 flex-row justify-between gap-4">
+          {COLUMNS.map((column) => {
+            const contractsForColumn = groupedContracts[column.key];
 
-        <div className="w-full flex flex-col h-full min-h-0">
-          <ContractStatusHeaderCard status="On Review" count={8} />
-          <ScrollArea className="h-full">
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-          </ScrollArea>
-        </div>
-
-        <div className="w-full flex flex-col h-full min-h-0">
-          <ContractStatusHeaderCard status="Negotiating" count={12} />
-          <ScrollArea className="h-full">
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-          </ScrollArea>
-        </div>
-
-        <div className="w-full flex flex-col h-full min-h-0">
-          <ContractStatusHeaderCard status="Signing" count={3} />
-          <ScrollArea className="h-full">
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-            <ContractCard
-              company="PT ABC"
-              title="Contract-4"
-              createdAt="26/09/2025"
-            />
-          </ScrollArea>
+            return (
+              <div
+                key={column.key}
+                className="flex h-full min-h-0 w-full flex-col"
+              >
+                <ContractStatusHeaderCard
+                  status={column.key}
+                  count={contractsForColumn.length}
+                />
+                <ScrollArea className="h-full">
+                  {contractsForColumn.length === 0 ? (
+                    <div className="mt-6 rounded-lg border border-dashed border-[#E3E7EA] p-6 text-center text-xs text-[#7F868E]">
+                      No contracts in this stage yet.
+                    </div>
+                  ) : (
+                    contractsForColumn.map((contract) => (
+                      <ContractCard
+                        key={contract.id}
+                        company={contract.counterPartyName ?? "Unknown"}
+                        title={contract.name}
+                        createdAt={formatDate(contract.createdAt)}
+                      />
+                    ))
+                  )}
+                </ScrollArea>
+              </div>
+            );
+          })}
         </div>
       </main>
     </div>

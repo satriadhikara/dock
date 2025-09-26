@@ -15,8 +15,10 @@ import {
 import Image from "next/image";
 import { ContractOverviewChart } from "@/components/dashboard/pie-chart";
 import { ContractTrendChart } from "@/components/dashboard/line-chart";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
+  const router = useRouter();
   const statsData = [
     {
       title: "Total Contract Value",
@@ -110,6 +112,7 @@ export default function Dashboard() {
             <Button
               variant="outline"
               className="flex-1 h-14 rounded-lg !bg-white !text-[#1E609E] hover:!bg-gray-50 border shadow cursor-pointer text-base"
+              onClick={() => router.push("/contracts/new")}
             >
               <FilePlus className="w-5 h-5 mr-2" /> Create New Contract
             </Button>
