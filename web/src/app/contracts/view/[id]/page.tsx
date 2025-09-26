@@ -180,6 +180,7 @@ const ViewContractPage = () => {
               <Eye className="h-5 w-5" />
               <span className="text-sm font-semibold">Review</span>
             </Button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button className="bg-[#1E609E] hover:bg-[#1A5490] text-white cursor-pointer flex items-center gap-2.5">
@@ -188,13 +189,31 @@ const ViewContractPage = () => {
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
-                <DropdownMenuItem>Team</DropdownMenuItem>
-                <DropdownMenuItem>Subscription</DropdownMenuItem>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem className="border-b border-gray-100">
+                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#D1E9FF]">
+                    <Eye className="h-4 w-4 text-[#2E90FA]" />
+                  </div>
+                  For Review
+                </DropdownMenuItem>
+                <DropdownMenuItem className="border-b border-gray-100">
+                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#ECFDF3]">
+                    <BadgeCheck className="h-4 w-4 text-[#12B76A]" />
+                  </div>
+                  For Approval
+                </DropdownMenuItem>
+                <DropdownMenuItem className="border-b border-gray-100">
+                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#EBE9FE]">
+                    <Signature className="h-4 w-4 text-[#7A5AF8]" />
+                  </div>
+                  For Signage
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#FEF0C7]">
+                    <Lightbulb className="h-4 w-4 text-[#F79009]" />
+                  </div>
+                  For Acknowledge
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
