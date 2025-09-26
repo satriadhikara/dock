@@ -1,5 +1,11 @@
 import { Hono } from "hono";
-import { createContractMock, createCounterParty, getContract, getCounterParties, updateContractContent } from "./service";
+import {
+	createContractMock,
+	createCounterParty,
+	getContract,
+	getCounterParties,
+	updateContractContent,
+} from "./service";
 
 const app = new Hono();
 
@@ -23,9 +29,9 @@ app.post("/counter-parties", async (c) => {
 });
 
 app.post("/mock", async (c) => {
-	const { content } = await c.req.json();
+	const { name, content } = await c.req.json();
 	try {
-		const contract = await createContractMock(content);
+		const contract = await createContractMock(name, content);
 		return c.json(contract);
 	} catch (error) {
 		return c.json({ error: "Failed to create mock contract" }, 500);

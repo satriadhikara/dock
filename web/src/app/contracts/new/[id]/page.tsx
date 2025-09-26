@@ -206,7 +206,6 @@ const NewContractPage = () => {
           <span className="text-sm font-medium">Back</span>
         </button>
 
-    
         <h1 className="text-sm font-medium">
           {contract?.name ?? "New Contract"}
         </h1>

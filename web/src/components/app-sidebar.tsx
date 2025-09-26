@@ -80,7 +80,7 @@ export function AppSidebar() {
   const router = useRouter();
   const handleStartDrafting = () => {
     // Navigate to start drafting page
-    router.push("/start-drafting");
+    router.push("/contracts/new");
   };
 
   const handleStoreSignedDoc = () => {
