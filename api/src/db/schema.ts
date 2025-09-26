@@ -6,6 +6,9 @@ import {
 	pgEnum,
 	jsonb,
 	varchar,
+	serial,
+	vector,
+	index,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -130,3 +133,25 @@ export const contractAsset = pgTable("contract_asset", {
 		.notNull()
 		.$defaultFn(() => new Date()),
 });
+
+// Embeddings for RAG (pgvector-backed). Dimensions match Gemini text-embedding-004 (768)
+export const contractChunkEmbeddings = pgTable(
+	"contract_chunk_embeddings",
+	{
+		id: serial("id").primaryKey(),
+		ownerId: text("owner_id").notNull(),
+		contractId: text("contract_id").references(() => contract.id, {
+			onDelete: "cascade",
+		}),
+		content: text("content").notNull(),
+		embedding: vector("embedding", { dimensions: 768 }).notNull(),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("contract_chunk_embeddings_hnsw")
+			.using("hnsw", table.embedding.op("vector_cosine_ops")),
+		index("contract_chunk_embeddings_owner_idx").on(table.ownerId),
+	],
+);
