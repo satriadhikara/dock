@@ -11,9 +11,7 @@ app.post("/", async (c: any) => {
 	try {
 		const { messages } = (await c.req.json()) as { messages: UIMessage[] };
 
-		const apiKey = Bun.env.GEMINI_API_KEY as
-			| string
-			| undefined;
+		const apiKey = Bun.env.GEMINI_API_KEY as string | undefined;
 		if (!apiKey) {
 			return c.json(
 				{ error: "Missing GOOGLE_GENERATIVE_AI_API_KEY in environment" },
@@ -37,4 +35,3 @@ app.post("/", async (c: any) => {
 });
 
 export default app;
-
