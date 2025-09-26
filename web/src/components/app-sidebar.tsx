@@ -1,5 +1,5 @@
 // app-sidebar.tsx
-"use client"
+"use client";
 
 import {
   Sidebar,
@@ -10,12 +10,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
-} from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import Image from "next/image"
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { useSession } from "@/lib/auth-client";
 
 const items = [
   {
@@ -55,11 +56,11 @@ const items = [
     icon: "/sidebar/Manta.svg",
     iconActive: "/sidebar/MantaActive.svg",
   },
-]
+];
 
 export function AppSidebar() {
-  const pathname = usePathname()
-  
+  const pathname = usePathname();
+  const { data: session } = useSession();
   return (
     <Sidebar className="border-r bg-white">
       <SidebarContent className="flex flex-col justify-between h-full">
@@ -83,16 +84,16 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {items.map((item) => {
-                  const isActive = pathname === item.url
+                  const isActive = pathname === item.url;
                   return (
                     <SidebarMenuItem className="flex gap-2" key={item.title}>
                       <div
-                          className={cn(
-                              "w-1.5 rounded-br-lg rounded-r-lg",
-                              isActive
-                              ? "bg-[#1E609E] text-gray-500"
-                              : "text-gray-500 hover:!bg-gray-100 hover:!text-gray-700"
-                          )}
+                        className={cn(
+                          "w-1.5 rounded-br-lg rounded-r-lg",
+                          isActive
+                            ? "bg-[#1E609E] text-gray-500"
+                            : "text-gray-500 hover:!bg-gray-100 hover:!text-gray-700",
+                        )}
                       ></div>
                       <SidebarMenuButton
                         asChild
@@ -101,15 +102,18 @@ export function AppSidebar() {
                           "rounded-lg px-4 py-7 transition-colors !bg-transparent",
                           isActive
                             ? "!bg-[#1E609E] !text-white hover:!bg-[#1E609E]"
-                            : "text-gray-500 hover:!bg-gray-100 hover:!text-gray-700"
+                            : "text-gray-500 hover:!bg-gray-100 hover:!text-gray-700",
                         )}
                       >
-                        <Link href={item.url} className="flex items-center gap-3">
-                          <Image 
-                            src={isActive ? item.iconActive : item.icon} 
+                        <Link
+                          href={item.url}
+                          className="flex items-center gap-3"
+                        >
+                          <Image
+                            src={isActive ? item.iconActive : item.icon}
                             alt={`${item.title} icon`}
-                            width={25} 
-                            height={25  } 
+                            width={25}
+                            height={25}
                             className="h-5 w-5"
                           />
                           <span>{item.title}</span>
@@ -121,7 +125,7 @@ export function AppSidebar() {
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  )
+                  );
                 })}
               </SidebarMenu>
             </SidebarGroupContent>
@@ -132,15 +136,25 @@ export function AppSidebar() {
         <SidebarFooter className="p-4 border-t">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 flex items-center justify-center rounded-full bg-yellow-400 text-white font-bold">
-              A
+              {session?.user?.image ? (
+                <Image
+                  className="rounded-full size-9"
+                  src={session?.user?.image}
+                  alt="User Image"
+                  width={36}
+                  height={36}
+                />
+              ) : (
+                session?.user?.name?.charAt(0)
+              )}
             </div>
             <div className="flex flex-col">
-              <span className="font-medium text-sm">Andhika Fadillah</span>
+              <span className="font-medium text-sm">{session?.user?.name}</span>
               <span className="text-xs text-gray-500">Legal Team</span>
             </div>
           </div>
         </SidebarFooter>
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }
