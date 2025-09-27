@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { HTMLAttributes } from "react";
 import {
   MessageCirclePlus,
   History,
@@ -12,6 +13,13 @@ import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
+import type { PluggableList } from "unified";
+import type { Components } from "react-markdown";
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 import { useSession } from "@/lib/auth-client";
 
 export default function MantaPage() {
@@ -41,6 +49,44 @@ export default function MantaPage() {
     // include credentials so auth cookies flow across origins
     return new DefaultChatTransport({ api, credentials: "include" });
   }, [apiBase]);
+
+  const markdownPlugins = useMemo(
+    () => [remarkGfm, remarkBreaks] as PluggableList,
+    [],
+  );
+  const markdownComponents = useMemo<Components>(
+    () => ({
+      a: ({ node: _node, ...props }) => (
+        <a
+          {...props}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline text-[#1E609E] hover:text-[#164a7a]"
+        />
+      ),
+      ul: ({ node: _node, ...props }) => (
+        <ul {...props} className="list-disc pl-5 space-y-1" />
+      ),
+      ol: ({ node: _node, ...props }) => (
+        <ol {...props} className="list-decimal pl-5 space-y-1" />
+      ),
+      li: ({ node: _node, ...props }) => (
+        <li {...props} className="leading-relaxed" />
+      ),
+      p: ({ node: _node, ...props }) => (
+        <p {...props} className="leading-relaxed" />
+      ),
+      code: ({ inline, className, children, ...props }: HTMLAttributes<HTMLElement> & { inline?: boolean }) => (
+        <code
+          {...props}
+          className={`rounded bg-[#F5F7FA] px-1.5 py-0.5 text-sm ${className ?? ""}`.trim()}
+        >
+          {children}
+        </code>
+      ),
+    }),
+    [],
+  );
 
   const { messages, sendMessage, stop, status, setMessages } = useChat({
     transport: chatTransport,
@@ -328,9 +374,19 @@ export default function MantaPage() {
                           : "max-w-[75%] bg-white text-[#111827] px-3 py-2 rounded-2xl rounded-bl-md border border-[#E3E7EA80]"
                       }
                     >
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {text}
-                      </p>
+                      {isUser ? (
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                          {text}
+                        </p>
+                      ) : (
+                        <ReactMarkdown
+                          remarkPlugins={markdownPlugins}
+                          components={markdownComponents}
+                          className="prose prose-sm max-w-none text-sm text-[#111827] prose-p:leading-relaxed prose-ul:mt-2 prose-ol:mt-2 prose-li:marker:text-[#4EB4E1]"
+                        >
+                          {text}
+                        </ReactMarkdown>
+                      )}
                     </div>
                   </div>
                 </div>
