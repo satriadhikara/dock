@@ -12,11 +12,13 @@ import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import Image from "next/image";
+import { useSession } from "@/lib/auth-client";
 
 export default function MantaPage() {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const { data: session } = useSession();
 
   // Chat session types and state
   type ChatSession = {
@@ -294,9 +296,19 @@ export default function MantaPage() {
                     {/* Avatar */}
                     <div className="h-8 w-8 flex-shrink-0">
                       {isUser ? (
-                        <div className="h-8 w-8 rounded-full bg-[#E6E6E6] text-[#4B5563] text-sm font-medium flex items-center justify-center select-none">
-                          U
-                        </div>
+                        session?.user?.image ? (
+                          <Image
+                            src={session.user.image}
+                            alt={session.user.name ?? "You"}
+                            width={32}
+                            height={32}
+                            className="rounded-full border border-[#E3E7EA80] bg-white object-cover"
+                          />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-[#E6E6E6] text-[#4B5563] text-sm font-medium flex items-center justify-center select-none">
+                            {(session?.user?.name ?? "U").charAt(0)}
+                          </div>
+                        )
                       ) : (
                         <Image
                           src="/mantaProfile.png"
