@@ -1,4 +1,4 @@
-# 🚢 DOCK – Digital & Operation Contract Knowledge System
+# 🚢 DOCK – Digital & Operation Contract Knowledge System (https://ai.dock-ai.site) 
 DOCK adalah platform manajemen kontrak pintar yang dirancang untuk mentransformasi proses pengelolaan kontrak dari sekadar pusat biaya dan risiko menjadi pendorong efisiensi, kontrol, serta keunggulan kompetitif. Solusi ini dikembangkan untuk mendukung transformasi digital perusahaan dengan memanfaatkan **AI-Powered Document Analysis**, **Automated Contract Lifecycle Management**, dan **Automated Drafting & Compliance**.
 
 ## � Daftar Isi
@@ -48,7 +48,7 @@ DOCK hadir untuk menjawab tantangan ini dengan menciptakan ekosistem digital yan
 ## 💻 Teknologi
 
 ### Teknologi yang digunakan yaitu:
-- **Next.js 14** - React framework dengan App Router
+- **Next.js 15** - React framework dengan App Router
 - **TypeScript** - Type-safe JavaScript
 - **Tailwind CSS** - Utility-first CSS framework
 - **Hono** - Fast web framework
