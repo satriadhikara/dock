@@ -10,22 +10,40 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import Image from "next/image";
 
 export default function MantaPage() {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Chat session types and state
+  type ChatSession = {
+    id: string;
+    title: string;
+    createdAt: number; // epoch ms
+    updatedAt: number; // epoch ms
+    messages: UIMessage[];
+  };
+
+  const SESSIONS_KEY = "manta:sessions:v1";
+  const ACTIVE_KEY = "manta:activeSessionId:v1";
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
   const apiBase = (process.env.NEXT_PUBLIC_API_URL as string | undefined) ?? "";
   const chatTransport = useMemo(() => {
     const base = apiBase.replace(/\/$/, "");
     const api = base ? `${base}/api/chat` : "/api/chat";
-    return new DefaultChatTransport({ api });
+    // include credentials so auth cookies flow across origins
+    return new DefaultChatTransport({ api, credentials: "include" });
   }, [apiBase]);
 
-  const { messages, sendMessage, stop, status } = useChat({
+  const { messages, sendMessage, stop, status, setMessages } = useChat({
     transport: chatTransport,
+    // tie the chat state to the active session id so streams don't leak across sessions
+    id: activeSessionId ?? "default",
   });
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -61,6 +79,124 @@ export default function MantaPage() {
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  // Load sessions from localStorage on mount
+  useEffect(() => {
+    try {
+      const raw =
+        typeof window !== "undefined"
+          ? localStorage.getItem(SESSIONS_KEY)
+          : null;
+      const rawActive =
+        typeof window !== "undefined" ? localStorage.getItem(ACTIVE_KEY) : null;
+      const parsed: ChatSession[] = raw ? JSON.parse(raw) : [];
+      // Migrate or ensure structure
+      const safe = Array.isArray(parsed) ? parsed : [];
+      setSessions(safe);
+      if (safe.length === 0) {
+        // create first empty session
+        const id = crypto.randomUUID();
+        const now = Date.now();
+        const first: ChatSession = {
+          id,
+          title: "New chat",
+          createdAt: now,
+          updatedAt: now,
+          messages: [],
+        };
+        setSessions([first]);
+        setActiveSessionId(id);
+        localStorage.setItem(SESSIONS_KEY, JSON.stringify([first]));
+        localStorage.setItem(ACTIVE_KEY, id);
+      } else {
+        const chosen =
+          rawActive && safe.some((s) => s.id === rawActive)
+            ? rawActive
+            : safe[0].id;
+        setActiveSessionId(chosen);
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist sessions whenever sessions change
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+      }
+    } catch {
+      // ignore
+    }
+  }, [sessions]);
+
+  // Persist active session id when it changes
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && activeSessionId) {
+        localStorage.setItem(ACTIVE_KEY, activeSessionId);
+      }
+    } catch {
+      // ignore
+    }
+  }, [activeSessionId]);
+
+  // When active session changes, load its messages into the chat hook
+  useEffect(() => {
+    if (!activeSessionId) return;
+    const sess = sessions.find((s) => s.id === activeSessionId);
+    if (!sess) return;
+    setMessages(sess.messages as any);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSessionId]);
+
+  // Whenever messages update from the AI hook, reflect them into the active session and persist
+  useEffect(() => {
+    if (!activeSessionId) return;
+    setSessions((prev) => {
+      const idx = prev.findIndex((s) => s.id === activeSessionId);
+      if (idx === -1) return prev;
+      const now = Date.now();
+      const next = [...prev];
+      const newTitle = (() => {
+        const firstUser = messages.find((m) => m.role === "user");
+        if (!firstUser) return next[idx].title || "New chat";
+        const firstText = firstUser.parts
+          .map((p: any) => (p.type === "text" ? p.text : ""))
+          .join("")
+          .trim();
+        if (!firstText) return next[idx].title || "New chat";
+        return next[idx].title && next[idx].title !== "New chat"
+          ? next[idx].title
+          : firstText.slice(0, 60);
+      })();
+      next[idx] = {
+        ...next[idx],
+        title: newTitle,
+        messages: messages as UIMessage[],
+        updatedAt: now,
+      };
+      return next;
+    });
+  }, [messages, activeSessionId, setSessions]);
+
+  const createNewSession = () => {
+    const id = crypto.randomUUID();
+    const now = Date.now();
+    const sess: ChatSession = {
+      id,
+      title: "New chat",
+      createdAt: now,
+      updatedAt: now,
+      messages: [],
+    };
+    setSessions((prev) => [sess, ...prev]);
+    setActiveSessionId(id);
+    // Clear current chat state
+    setMessages([] as any);
+  };
 
   // Reusable input form renderer (keeps DOM stable, avoids remount on each render)
   const renderInputBar = (wrapperClass: string) => {
@@ -103,10 +239,18 @@ export default function MantaPage() {
   return (
     <div className="w-full">
       <div className="w-full h-[72px] flex justify-end items-center gap-4 pr-4 border-b border-b-[#E3E7EA80]">
-        <button className="bg-[#E6E6E6] w-[40px] h-[40px] flex justify-center items-center rounded-[4px] hover:bg-[#D4D4D4]">
+        <button
+          onClick={createNewSession}
+          title="New Chat"
+          className="bg-[#E6E6E6] w-[40px] h-[40px] flex justify-center items-center rounded-[4px] hover:bg-[#D4D4D4]"
+        >
           <MessageCirclePlus className="h-[22px] w-[22px]" />
         </button>
-        <button className="bg-[#E6E6E6] w-[40px] h-[40px] flex justify-center items-center rounded-[4px] hover:bg-[#D4D4D4]">
+        <button
+          onClick={() => setShowHistory((v) => !v)}
+          title="Show History"
+          className="bg-[#E6E6E6] w-[40px] h-[40px] flex justify-center items-center rounded-[4px] hover:bg-[#D4D4D4]"
+        >
           <History className="h-[22px] w-[22px]" />
         </button>
       </div>
@@ -184,6 +328,57 @@ export default function MantaPage() {
 
           {/* Input area at bottom */}
           {renderInputBar("relative w-full max-w-[931px] pb-8")}
+        </div>
+      )}
+
+      {/* History Drawer */}
+      {showHistory && (
+        <div className="fixed inset-0 z-40">
+          <div
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setShowHistory(false)}
+          />
+          <div className="absolute right-0 top-0 h-full w-[360px] bg-white shadow-xl border-l border-[#E3E7EA80] flex flex-col">
+            <div className="px-4 py-3 border-b border-[#E3E7EA80] flex items-center justify-between">
+              <div className="font-medium">Chat History</div>
+              <button
+                onClick={createNewSession}
+                className="h-8 px-2 text-sm bg-[#E6E6E6] rounded hover:bg-[#D4D4D4] flex items-center gap-1"
+              >
+                <CirclePlus className="h-4 w-4" /> New Chat
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {sessions
+                .slice()
+                .sort((a, b) => b.updatedAt - a.updatedAt)
+                .map((s) => {
+                  const active = s.id === activeSessionId;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => {
+                        setActiveSessionId(s.id);
+                        setShowHistory(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 border-b border-[#EFF2F4] hover:bg-[#F7F9FA] ${active ? "bg-[#F2FAFF]" : ""}`}
+                    >
+                      <div className="text-sm font-medium truncate">
+                        {s.title || "New chat"}
+                      </div>
+                      <div className="text-[11px] text-[#6B7280] mt-0.5">
+                        {new Date(s.updatedAt).toLocaleString()}
+                      </div>
+                    </button>
+                  );
+                })}
+              {sessions.length === 0 && (
+                <div className="px-4 py-6 text-sm text-[#6B7280]">
+                  No chats yet.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
