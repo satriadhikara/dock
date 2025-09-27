@@ -99,60 +99,6 @@ export function LoginForm({
                 <img src="/google.svg" alt="Google" className="h-5 w-5" />
                 Login with Google
               </Button>
-
-              {/* Divider */}
-              <div className="flex items-center gap-4">
-                <div className="flex-1 border-t" />
-                <span className="text-sm text-muted-foreground">or</span>
-                <div className="flex-1 border-t" />
-              </div>
-
-              {/* Email */}
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="rounded-lg"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Password */}
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Enter your password"
-                        className="rounded-lg"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Login Button */}
-              <Button
-                type="submit"
-                className="w-full rounded-full bg-[#64B5F6] hover:bg-[#42A5F5] cursor-pointer"
-                disabled
-              >
-                Login
-              </Button>
             </form>
           </Form>
         </CardContent>
