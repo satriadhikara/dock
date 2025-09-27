@@ -284,9 +284,7 @@ const ViewContractPage = () => {
             <DropdownMenuTrigger asChild>
               <Button
                 className="bg-white border border-[#D0D3D7] text-[#192632] cursor-pointer hover:bg-[#F7F7F7]"
-                disabled={
-                  updateStatusMutation.isPending
-                }
+                disabled={updateStatusMutation.isPending}
               >
                 Send to Counterparty
               </Button>
@@ -310,9 +308,7 @@ const ViewContractPage = () => {
 
                   handleSendToCounterpartyReview();
                 }}
-                disabled={
-                  updateStatusMutation.isPending
-                }
+                disabled={updateStatusMutation.isPending}
               >
                 <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#D1E9FF]">
                   <Eye className="h-4 w-4 text-[#2E90FA]" />
@@ -335,9 +331,7 @@ const ViewContractPage = () => {
 
                   handleRequestSignature();
                 }}
-                disabled={
-                  updateStatusMutation.isPending
-                }
+                disabled={updateStatusMutation.isPending}
               >
                 <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md bg-[#EBE9FE]">
                   <Signature className="h-4 w-4 text-[#7A5AF8]" />

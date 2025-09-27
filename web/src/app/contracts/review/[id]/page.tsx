@@ -167,14 +167,17 @@ const NewContractPage = () => {
         throw new Error("Contract ID is missing.");
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/contract/${contractId}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${apiBaseUrl}/api/contract/${contractId}/status`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ status: nextStatus }),
         },
-        credentials: "include",
-        body: JSON.stringify({ status: nextStatus }),
-      });
+      );
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
@@ -186,11 +189,21 @@ const NewContractPage = () => {
     },
     onSuccess: (updatedContract, variables) => {
       queryClient.setQueryData(["contract", contractId], updatedContract);
-      queryClient.invalidateQueries({ queryKey: ["contracts"] }).catch(() => {});
-      queryClient.invalidateQueries({ queryKey: ["contracts", "repository"] }).catch(() => {});
-      queryClient.invalidateQueries({ queryKey: ["contracts", "inbox"] }).catch(() => {});
-      queryClient.invalidateQueries({ queryKey: ["contracts", "overview"] }).catch(() => {});
-      queryClient.invalidateQueries({ queryKey: ["contracts", "dashboard-cards"] }).catch(() => {});
+      queryClient
+        .invalidateQueries({ queryKey: ["contracts"] })
+        .catch(() => {});
+      queryClient
+        .invalidateQueries({ queryKey: ["contracts", "repository"] })
+        .catch(() => {});
+      queryClient
+        .invalidateQueries({ queryKey: ["contracts", "inbox"] })
+        .catch(() => {});
+      queryClient
+        .invalidateQueries({ queryKey: ["contracts", "overview"] })
+        .catch(() => {});
+      queryClient
+        .invalidateQueries({ queryKey: ["contracts", "dashboard-cards"] })
+        .catch(() => {});
       toast.success(variables.successMessage);
     },
     onError: (mutationError) => {
