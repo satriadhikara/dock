@@ -43,8 +43,8 @@ const statusColors: Record<string, string> = {
   Draft: "bg-gray-200 text-gray-700",
   "On Review": "bg-purple-100 text-purple-600",
   Negotiating: "bg-orange-100 text-orange-600",
+  Signing: "bg-green-100 text-green-600",
   Active: "bg-blue-100 text-blue-600",
-  Signed: "bg-green-100 text-green-600",
   Finished: "bg-gray-300 text-gray-700",
 };
 
@@ -52,8 +52,8 @@ type BackendContractStatus =
   | "Draft"
   | "On Review"
   | "Negotiating"
+  | "Signing"
   | "Active"
-  | "Signed"
   | "Finished";
 
 type ContractListItem = {

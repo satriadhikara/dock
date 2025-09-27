@@ -86,8 +86,8 @@ export const contractStatusEnum = pgEnum("status", [
 	"On Review",
 	"Negotiating",
 	"Active",
-	"Signed",
 	"Finished",
+	"Signing",
 ]);
 
 export const counterParty = pgTable("counter_party", {

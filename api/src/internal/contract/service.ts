@@ -107,6 +107,25 @@ export const updateContractContent = async (id: string, content: unknown) => {
 	}
 };
 
+export const updateContractStatus = async (id: string, status: string) => {
+	try {
+		const [updated] = await db
+			.update(contract)
+			.set({
+				status,
+			})
+			.where(eq(contract.id, id))
+			.returning({ id: contract.id });
+		if (!updated) {
+			return undefined;
+		}
+		return await getContract(id);
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
+};
+
 export const getContract = async (id: string) => {
 	try {
 		const [contractResult] = await db

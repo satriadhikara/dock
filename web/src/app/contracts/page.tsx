@@ -14,8 +14,8 @@ type BackendContractStatus =
   | "Draft"
   | "On Review"
   | "Negotiating"
+  | "Signing"
   | "Active"
-  | "Signed"
   | "Finished";
 
 type ContractListItem = {
@@ -36,7 +36,7 @@ const COLUMNS: ColumnDefinition[] = [
   { key: "Draft", label: "Draft", statuses: ["Draft"] },
   { key: "On Review", label: "On Review", statuses: ["On Review"] },
   { key: "Negotiating", label: "Negotiating", statuses: ["Negotiating"] },
-  { key: "Signing", label: "Signing", statuses: ["Signed", "Active"] },
+  { key: "Signing", label: "Signing", statuses: ["Signing"] },
 ];
 
 const formatDate = (value: string | null) => {
