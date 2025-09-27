@@ -2,11 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { JSONContent } from "@tiptap/core";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Signature } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import ContractLayout from "@/components/document-sidebar";
 
 type ContractResponse = {
@@ -152,17 +153,82 @@ const NewContractPage = () => {
     },
   });
 
+  const updateStatusMutation = useMutation<
+    ContractResponse,
+    Error,
+    { nextStatus: string; successMessage: string }
+  >({
+    mutationFn: async ({ nextStatus }) => {
+      if (!apiBaseUrl) {
+        throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+      }
+
+      if (!contractId) {
+        throw new Error("Contract ID is missing.");
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/contract/${contractId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ status: nextStatus }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const message = (body as { error?: string }).error;
+        throw new Error(message ?? "Failed to update contract status");
+      }
+
+      return (await response.json()) as ContractResponse;
+    },
+    onSuccess: (updatedContract, variables) => {
+      queryClient.setQueryData(["contract", contractId], updatedContract);
+      queryClient.invalidateQueries({ queryKey: ["contracts"] }).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ["contracts", "repository"] }).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ["contracts", "inbox"] }).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ["contracts", "overview"] }).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ["contracts", "dashboard-cards"] }).catch(() => {});
+      toast.success(variables.successMessage);
+    },
+    onError: (mutationError) => {
+      const message =
+        mutationError.message || "Failed to update contract status";
+      toast.error(message);
+    },
+  });
+
   const handleSave = useCallback(() => {
-    if (!contractId) {
+    if (!contractId || contract?.status === "Signing") {
+      if (contract?.status === "Signing") {
+        toast.error("Signing contracts are read-only.");
+      }
       return;
     }
 
     updateContractMutation.mutate(editorContent);
-  }, [contractId, editorContent, updateContractMutation]);
+  }, [contractId, contract?.status, editorContent, updateContractMutation]);
 
   const handleGoBack = () => {
     router.back();
   };
+
+  const currentStatus = contract?.status;
+  const isSigning = currentStatus === "Signing";
+
+  const handleMarkAsSigned = useCallback(() => {
+    if (currentStatus !== "Signing") {
+      toast.error("Only contracts in signing status can be marked as signed.");
+      return;
+    }
+
+    updateStatusMutation.mutate({
+      nextStatus: "Active",
+      successMessage: "Contract marked as signed",
+    });
+  }, [currentStatus, updateStatusMutation]);
 
   if (!isApiConfigured) {
     return (
@@ -230,7 +296,7 @@ const NewContractPage = () => {
           ) : null}
           <Button
             onClick={handleSave}
-            disabled={updateContractMutation.isPending}
+            disabled={updateContractMutation.isPending || isSigning}
             className="flex items-center gap-2 bg-white border border-[#E3E7EA]"
           >
             {updateContractMutation.isPending ? (
@@ -242,10 +308,24 @@ const NewContractPage = () => {
               {updateContractMutation.isPending ? "Saving..." : "Save"}
             </span>
           </Button>
+          {isSigning ? (
+            <Button
+              onClick={handleMarkAsSigned}
+              disabled={updateStatusMutation.isPending}
+              className="flex items-center gap-2 bg-[#12B76A] hover:bg-[#0E9F5A] text-white"
+            >
+              <Signature className="h-4 w-4" />
+              <span>Mark as Signed</span>
+            </Button>
+          ) : null}
         </div>
       </header>
       <main className="flex overflow-y-auto">
-        <SimpleEditor content={initialContent} onChange={setEditorContent} />
+        <SimpleEditor
+          content={initialContent}
+          onChange={setEditorContent}
+          readOnly={isSigning}
+        />
         <ContractLayout contract={contract} />
       </main>
     </div>

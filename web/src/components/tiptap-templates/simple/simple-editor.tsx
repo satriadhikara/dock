@@ -59,6 +59,7 @@ import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button";
 
 // --- Lib ---
 import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils";
+import { cn } from "@/lib/utils";
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss";
@@ -110,15 +111,18 @@ const MainToolbarContent = () => {
 export function SimpleEditor({
   content,
   onChange,
+  readOnly = false,
 }: {
   content?: JSONContent | null;
   onChange?: (value: JSONContent) => void;
+  readOnly?: boolean;
 }) {
   const toolbarRef = React.useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
+    editable: !readOnly,
     editorProps: {
       attributes: {
         autocomplete: "off",
@@ -161,6 +165,11 @@ export function SimpleEditor({
 
   React.useEffect(() => {
     if (!editor) return;
+    editor.setEditable(!readOnly);
+  }, [editor, readOnly]);
+
+  React.useEffect(() => {
+    if (!editor) return;
     if (content === undefined) return;
 
     const target = content ?? EMPTY_DOCUMENT;
@@ -179,7 +188,10 @@ export function SimpleEditor({
   return (
     <div className="simple-editor-wrapper">
       <EditorContext.Provider value={{ editor }}>
-        <Toolbar ref={toolbarRef}>
+        <Toolbar
+          ref={toolbarRef}
+          className={cn(readOnly && "pointer-events-none opacity-60")}
+        >
           <MainToolbarContent />
         </Toolbar>
 

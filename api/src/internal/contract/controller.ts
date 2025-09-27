@@ -7,6 +7,7 @@ import {
 	getContracts,
 	getCounterParties,
 	updateContractContent,
+	updateContractStatus,
 } from "./service";
 import { auth } from "../../lib/auth";
 
@@ -103,6 +104,25 @@ app.put("/:id/content", async (c) => {
 		return c.json(contract);
 	} catch (_error) {
 		return c.json({ error: "Failed to update contract content" }, 500);
+	}
+});
+
+app.put("/:id/status", async (c) => {
+	const { id } = c.req.param();
+	const { status } = await c.req.json<{ status?: string }>();
+
+	if (!status || typeof status !== "string") {
+		return c.json({ error: "status is required" }, 400);
+	}
+
+	try {
+		const contract = await updateContractStatus(id, status);
+		if (!contract) {
+			return c.json({ error: "Contract not found" }, 404);
+		}
+		return c.json(contract);
+	} catch (_error) {
+		return c.json({ error: "Failed to update contract status" }, 500);
 	}
 });
 

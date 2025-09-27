@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Search, CirclePlus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const templates = [
   {
@@ -47,7 +48,7 @@ const templates = [
 
 export default function TemplatesPage() {
   const [searchTerm, setSearchTerm] = useState("");
-
+  const router = useRouter();
   // Filter templates based on search term
   const filteredTemplates = templates.filter(
     (template) =>
@@ -70,7 +71,10 @@ export default function TemplatesPage() {
           />
         </div>
         <Link href="/manta">
-          <Button className="bg-black text-white flex items-center gap-2 rounded-full px-4 cursor-pointer">
+          <Button
+            className="bg-black text-white flex items-center gap-2 rounded-full px-4 cursor-pointer"
+            onClick={() => router.push("/manta")}
+          >
             Chat with Manta
             <Image
               src="/logo.svg"

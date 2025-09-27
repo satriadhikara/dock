@@ -31,6 +31,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { signOut, useSession } from "@/lib/auth-client";
+import { useQuery } from "@tanstack/react-query";
 import {
   FilePlus,
   FileUp,
@@ -41,47 +42,24 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-const items = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: "/sidebar/Dashboard.svg",
-    iconActive: "/sidebar/DashboardActive.svg",
-  },
-  {
-    title: "Contracts",
-    url: "/contracts",
-    icon: "/sidebar/Contracts.svg",
-    iconActive: "/sidebar/ContractsActive.svg",
-  },
-  {
-    title: "Inbox",
-    url: "/inbox",
-    icon: "/sidebar/Inbox.svg",
-    iconActive: "/sidebar/InboxActive.svg",
-    badge: 5,
-  },
-  {
-    title: "Repository",
-    url: "/repository",
-    icon: "/sidebar/Repository.svg",
-    iconActive: "/sidebar/RepositoryActive.svg",
-  },
-  {
-    title: "Templates",
-    url: "/templates",
-    icon: "/sidebar/Template.svg",
-    iconActive: "/sidebar/TemplateActive.svg",
-  },
-  {
-    title: "Manta",
-    url: "/manta",
-    icon: "/sidebar/Manta.svg",
-    iconActive: "/sidebar/MantaActive.svg",
-  },
-];
+type BackendContractStatus =
+  | "Draft"
+  | "On Review"
+  | "Negotiating"
+  | "Signing"
+  | "Active"
+  | "Finished";
+
+type ContractListItem = {
+  id: string;
+  name: string;
+  status: BackendContractStatus;
+  createdAt: string | null;
+  counterPartyName: string | null;
+  ownerName: string | null;
+};
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -89,6 +67,82 @@ export function AppSidebar() {
   const router = useRouter();
   const [storeDocModalOpen, setStoreDocModalOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const apiBaseUrl = useMemo(() => process.env.NEXT_PUBLIC_API_URL, []);
+
+  const { data: contracts } = useQuery<ContractListItem[], Error>({
+    queryKey: ["contracts"],
+    enabled: Boolean(apiBaseUrl),
+    queryFn: async () => {
+      if (!apiBaseUrl) {
+        throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/contract`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const message = (body as { error?: string }).error;
+        throw new Error(message ?? "Failed to load contracts");
+      }
+
+      return (await response.json()) as ContractListItem[];
+    },
+    staleTime: 1000 * 30,
+  });
+
+  const reviewCount = useMemo(() => {
+    if (!contracts) {
+      return 0;
+    }
+    return contracts.filter((contract) => contract.status === "On Review")
+      .length;
+  }, [contracts]);
+
+  const items = useMemo(
+    () => [
+      {
+        title: "Dashboard",
+        url: "/",
+        icon: "/sidebar/Dashboard.svg",
+        iconActive: "/sidebar/DashboardActive.svg",
+      },
+      {
+        title: "Contracts",
+        url: "/contracts",
+        icon: "/sidebar/Contracts.svg",
+        iconActive: "/sidebar/ContractsActive.svg",
+      },
+      {
+        title: "Inbox",
+        url: "/inbox",
+        icon: "/sidebar/Inbox.svg",
+        iconActive: "/sidebar/InboxActive.svg",
+        badge: reviewCount > 0 ? reviewCount : undefined,
+      },
+      {
+        title: "Repository",
+        url: "/repository",
+        icon: "/sidebar/Repository.svg",
+        iconActive: "/sidebar/RepositoryActive.svg",
+      },
+      {
+        title: "Templates",
+        url: "/templates",
+        icon: "/sidebar/Template.svg",
+        iconActive: "/sidebar/TemplateActive.svg",
+      },
+      {
+        title: "Manta",
+        url: "/manta",
+        icon: "/sidebar/Manta.svg",
+        iconActive: "/sidebar/MantaActive.svg",
+      },
+    ],
+    [reviewCount],
+  );
 
   useEffect(() => {
     setIsClient(true);
