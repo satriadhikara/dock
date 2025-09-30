@@ -379,13 +379,14 @@ export default function MantaPage() {
                           {text}
                         </p>
                       ) : (
-                        <ReactMarkdown
-                          remarkPlugins={markdownPlugins}
-                          components={markdownComponents}
-                          className="prose prose-sm max-w-none text-sm text-[#111827] prose-p:leading-relaxed prose-ul:mt-2 prose-ol:mt-2 prose-li:marker:text-[#4EB4E1]"
-                        >
-                          {text}
-                        </ReactMarkdown>
+                        <div className="prose prose-sm max-w-none text-sm text-[#111827] prose-p:leading-relaxed prose-ul:mt-2 prose-ol:mt-2 prose-li:marker:text-[#4EB4E1]">
+                          <ReactMarkdown
+                            remarkPlugins={markdownPlugins}
+                            components={markdownComponents}
+                          >
+                            {text}
+                          </ReactMarkdown>
+                        </div>
                       )}
                     </div>
                   </div>
